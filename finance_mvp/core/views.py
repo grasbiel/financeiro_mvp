@@ -2,6 +2,8 @@ from django.shortcuts import render
 
 # Create your views here.
 
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 from rest_framework import generics, permissions, serializers
 from rest_framework.response import Response
 from django.utils import timezone
@@ -259,3 +261,77 @@ class BudgetRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
                 raise serializers.ValidationError("Já existe um orçamento definido para este mês/ano/categoria")
             
         serializers.save()
+
+class ExpensesByCategoryView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # 1) ler parâmetros de data (Ex: ?start=2025-03-01&end=2025-03-31)
+        start_str = request.query_params.get('start') #string
+        end_str = request.query_params.get('end')
+
+        # 2) Base QuerySet: despesas (value__lt=0) do usuário logado
+        qs = Transaction.objects.filter(
+            user = request.user,
+            value__lt=0 # < 0 => despesas
+        )
+
+        # 3) Se o usuário passou start e end, filtramos date__range
+        if start_str and end_str:
+            # Converter strings para objeto datetime.date
+            start_date = datetime.strptime(start_str, "%Y-%m-%d").date()
+            end_date = datetime.strptime(end_str, "%Y-%m-%d").date()
+
+            qs = qs.filter(date__range=[start_date, end_date])
+
+        # 4) Agrupamento por categoria, somando 'value'
+        date = qs.values('category__name').annotate(total=Sum('value'))
+
+        # `data` terá algo como:
+        # [{'category__name': 'Alimentação', 'total': -1200},
+        # {'category__name': 'Transporte', 'total': -350, ...}]
+
+        # 5) Ajustar formato: total de despesas em valor positivo
+        results= []
+
+        for item in data:
+            category_name = item['category__name'] or 'Sem Categoria'
+            total_abs = abs(item['total']) # Converter -1200 em 1200
+            results.append({
+                'category': category_name,
+                'total_expenses': total_abs
+            })
+
+        return Response(results)
+    
+
+class IncomesByCategoryView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        start_str = request.query_params.get('start')
+        end_str = request.query_params.get('end')
+
+        qs = Transaction.objects.filter(
+            user = request.user,
+            value__gt= 0 # > 0 => receitas
+        )
+
+        if start_str and end_str:
+            start_date = datetime.strptime(start_str, "%Y-%m-%d").date()
+            end_date = datetime.strptime(end_str, "%Y-%m-%d").date()
+            qs = qs.filter(date__range=[start_date, end_date])
+
+        data = qs.values('category__name').annotate(total = Sum('value'))
+
+        results = []
+
+        for item in data:
+            category_name = item['category__name'] or 'Sem Categoria'
+            total_value = float(item['total']) # Já é positivo
+            results.append({
+                'category': category_name,
+                'total_incomes': total_value
+            })
+
+        return Response(results)
