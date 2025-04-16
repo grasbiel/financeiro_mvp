@@ -285,7 +285,7 @@ class ExpensesByCategoryView(APIView):
             qs = qs.filter(date__range=[start_date, end_date])
 
         # 4) Agrupamento por categoria, somando 'value'
-        date = qs.values('category__name').annotate(total=Sum('value'))
+        data = qs.values('category__name').annotate(total=Sum('value'))
 
         # `data` terá algo como:
         # [{'category__name': 'Alimentação', 'total': -1200},
