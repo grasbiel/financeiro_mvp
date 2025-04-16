@@ -9,7 +9,9 @@ from .views import (
     CategoryListCreateView,
     CategoryRetrieveUpdateDestroyView,
     BudgetRetrieveUpdateDestroyView,
-    BudgetListCreateView
+    BudgetListCreateView,
+    ExpensesByCategoryView,
+    IncomesByCategoryView
 )
 
 urlpatterns = [
@@ -34,6 +36,11 @@ urlpatterns = [
     path('categories/<int:pk>/', CategoryRetrieveUpdateDestroyView.as_view(), name='categories-detail'),
 
     path('budgets/', BudgetListCreateView.as_view(), name= 'budget-list-create'),
-    path('budgets/<int:pk>/', BudgetRetrieveUpdateDestroyView.as_view(), name= 'budget-detail')
+    path('budgets/<int:pk>/', BudgetRetrieveUpdateDestroyView.as_view(), name= 'budget-detail'),
+
+    # Expenses and Incomes ByCategory
+    path('reports/expenses_by_category/', ExpensesByCategoryView.as_view(), name= "expenses-by-category"),
+    path('reports/incomes_by_category/', IncomesByCategoryView.as_view(), name='incomes-by-category'),
+
 
 ]
