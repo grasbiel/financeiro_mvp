@@ -41,12 +41,7 @@ export default function Budgets() {
             <h2>Orçamentos</h2>
             {/*Formulário simples */}
             <Grid container spacing={2} mb={2}>
-                <Grid sx={{
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center'
-                }}>
+                <Grid size={{xs:12, md: 3}}>
                     <TextField
                         label= "Limite (R$)"
                         value= {form.amount_limit}
