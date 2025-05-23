@@ -5,7 +5,7 @@ import { AuthProvider } from './auth/AuthProvider'
 import RequireAuth from './auth/RequireAuth'
 
 import Login from './pages/Login'
-import DashBoard from './pages/DashBoard'
+import DashBoard from './pages/Dashboard'
 import Transactions from './pages/Transactions'
 import Categories from './pages/Categories'
 import Budgets from './pages/Budgets'
