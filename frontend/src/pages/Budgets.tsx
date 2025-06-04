@@ -1,90 +1,80 @@
+// src/pages/Budgets.tsx
 import {
-    Container, TextField, Button, Card, CardContent
-} from '@mui/material'
-
-import Grid from '@mui/material/Grid';
-import { useEffect, useState } from 'react'
-import api from '../api/api'
+  Container,
+  Card,
+  CardContent,
+  IconButton,
+  Box,
+} from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import { useEffect, useState } from 'react';
+import api from '../api/api';
+import AddBudgetDialog from '../components/AddBudgetDialog';
 
 interface Budget {
-    id: number
-    amount_limit: number
-    month: number
-    year: number
-    category: number | null
+  id: number;
+  amount_limit: number;
+  month: number;
+  year: number;
 }
 
 export default function Budgets() {
-    const [list, setList] = useState<Budget[]>([])
-    const [form, setForm] = useState({amount_limit: '', month: '', year: ''})
+  const [list, setList] = useState<Budget[]>([]);
+  const [open, setOpen] = useState(false);
 
-    const fetchBudgets = () => {
-        api.get<Budget[]>('/budgets/').then(res => setList(res.data))
-    }
+  const fetchBudgets = () => {
+    api
+      .get<Budget[]>('/budgets/')
+      .then((r) => {
+        setList(r.data);
+      })
+      .catch((err) => {
+        console.error('Erro ao buscar orçamentos:', err);
+      });
+  };
 
-    useEffect(fetchBudgets, [])
+  useEffect(() => {
+    fetchBudgets();
+  }, []);
 
-    const handleAdd = async () => {
-        const { amount_limit, month, year} = form
-        if (!amount_limit || !month || !year) return
-        await api.post('/budgets/', {
-            amount_limit: parseFloat(amount_limit),
-            month: parseInt(month, 10),
-            year: parseInt(year, 10)
-        });
-        setForm({amount_limit: '', month: '', year: ''});
-        fetchBudgets()
-    }
+  return (
+    <Container>
+      <h2>Orçamentos</h2>
+      <IconButton onClick={() => setOpen(true)} color="primary">
+        <AddIcon />
+      </IconButton>
 
-    return (
-        <Container>
-            <h2>Orçamentos</h2>
-            {/*Formulário simples */}
-            <Grid container spacing={2} mb={2}>
-                <Grid size={{xs:12, md: 3}}>
-                    <TextField
-                        label= "Limite (R$)"
-                        value= {form.amount_limit}
-                        onChange={e => setForm({...form, amount_limit: e.target.value})}
-                        fullWidth
-                    />
-                </Grid>
-                <Grid size={{xs: 6, md:12}}>
-                    <TextField 
-                        label= "Mês"
-                        value= {form.month}
-                        onChange={e => setForm({...form, month: e.target.value})}
-                        fullWidth
-                    />                
-                </Grid>
+      {/* Usando Box + CSS Grid em vez de Grid */}
+      <Box
+        sx={{
+          display: 'grid',
+          gap: 2,
+          // Em telas pequenas: 1 coluna; em md+: 3 colunas:
+          gridTemplateColumns: {
+            xs: '1fr',
+            md: 'repeat(3, 1fr)',
+          },
+          mt: 2, // margin-top
+        }}
+      >
+        {list.map((b) => (
+          <Card key={b.id}>
+            <CardContent>
+              <strong>
+                {b.month}/{b.year}
+              </strong>
+              <br />
+              Limite: R$ {b.amount_limit}
+            </CardContent>
+          </Card>
+        ))}
+      </Box>
 
-                <Grid  size={{xs:6, md:12}}>
-                    <TextField 
-                        label= "Ano"
-                        value={form.year}
-                        onChange={e => setForm({...form, year: e.target.value})}
-                    />
-                </Grid>
-
-                <Grid size= {{xs:6, md:12}}>
-                    <Button variant='contained' fullWidth sx={{height: '100%'}} onClick={handleAdd}>
-                        Adicionar
-                    </Button>
-                </Grid>
-            </Grid>
-            
-            <Grid container spacing={2}>
-                {list.map(b => (
-                    <Grid  size= {{xs:12, md:4}} key={b.id}>
-                        <Card>
-                            <CardContent>
-                                <strong>{b.month}/{b.year}</strong> <br />
-                                Limite&nbsp;R$ {b.amount_limit}
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                ))}
-            </Grid>    
-        </Container>
-    );
+      <AddBudgetDialog
+        open={open}
+        onClose={() => setOpen(false)}
+        onCreated={fetchBudgets}
+      />
+    </Container>
+  );
 }
