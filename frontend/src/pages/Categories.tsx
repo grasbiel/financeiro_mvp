@@ -1,48 +1,92 @@
 import {
-    Container, TextField, Button, List, ListItem, ListItemText
+    Container, 
+    List, 
+    ListItem, 
+    ListItemText,
+    IconButton
 } from '@mui/material'
 import { useEffect, useState } from 'react'
+import DeleteIcon from '@mui/icons-material/Delete'
+import AddIcon from '@mui/icons-material/Add'
+import EditIcon from '@mui/icons-material/Edit'
 import api from '../api/api'
+import CategoryDialog from '../components/CategoryDialog'
 
-interface Category {id: number; name: string}
+interface Category {
+    id: number; 
+    name: string}
 
 export default function Categories () {
-    const [list, setList] = useState<Category[]>([])
-    const [name, setName] = useState('')
+    const [cats, setCats] = useState<Category[]>([]);
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [selected, setSelected] = useState<Category | null>(null);
 
     const fetchCats = () => {
-        api.get<Category[]>('/categories/').then(res => setList(res.data))
-    }
+        api.get<Category[]>('/categories/').then((r) => {
+            setCats(r.data)
+        });
+    };
 
-    useEffect(fetchCats, [])
+    // useEffect chama fetchCats de forma síncrona
+    useEffect(() => {
+        fetchCats();
+    }, [])
 
-    const handleAdd = async () => {
-        if (!name.trim()) return
-        await api.post('/categories/', {name})
-        setName('')
-        fetchCats()
-    }
+    const handleDelete = (id: number) => {
+        if (confirm("Excluir categoria?")) {
+            api.delete(`/categories/${id}/`).then(()=>{
+                fetchCats();
+            });
+        }
+    };
 
     return (
         <Container>
             <h2>Categorias</h2>
 
-            <div style={{display: 'flex', gap: 8, marginBottom:16}}>
-                <TextField
-                    label = "Nova Categoria"
-                    value = {name}
-                    onChange={e => setName(e.target.value)}
-                />
-                <Button variant='contained'>Adicionar</Button>
-            </div>
+            <IconButton
+                color='primary'
+                onClick={() =>{
+                    setSelected(null);
+                    setDialogOpen(true);
+                }}
+            >
+                <AddIcon />
+            </IconButton>
 
             <List>
-                {list.map(c => (
-                    <ListItem key={c.id}>
+                {cats.map((c) => (
+                    <ListItem 
+                        key={c.id}
+                        secondaryAction={
+                            <>
+                                <IconButton
+                                    onClick={() =>{
+                                        setSelected(c);
+                                        setDialogOpen(true);
+                                    }}
+                                >
+                                    <EditIcon />
+                                </IconButton>
+                                <IconButton
+                                    onClick={() => handleDelete(c.id)}
+                                >
+                                    <DeleteIcon />
+                                </IconButton>
+                            </>
+                        }
+                    >
                         <ListItemText primary={c.name} />
                     </ListItem>
                 ))}
             </List>
+
+            <CategoryDialog 
+                open={dialogOpen}
+                onClose={() => setDialogOpen(false)}
+                onSaved={fetchCats}
+                initial={selected}
+            />
         </Container>
     );
 }
