@@ -11,7 +11,9 @@ from .views import (
     BudgetRetrieveUpdateDestroyView,
     BudgetListCreateView,
     ExpensesByCategoryView,
-    IncomesByCategoryView
+    IncomesByCategoryView,
+    ExpensesByCategoryView,
+    ExpensesByEmotionalTriggerView
 )
 
 urlpatterns = [
@@ -42,5 +44,5 @@ urlpatterns = [
     path('reports/expenses_by_category/', ExpensesByCategoryView.as_view(), name= "expenses-by-category"),
     path('reports/incomes_by_category/', IncomesByCategoryView.as_view(), name='incomes-by-category'),
 
-
-]
+    path('reports/expenses_by_emotion/', ExpensesByEmotionalTriggerView.as_view(), name="expenses-by-emotion")
+]   
