@@ -31,11 +31,27 @@ class Budget(models.Model):
         return datetime.datetime.now().year
 
 class Transaction (models.Model):
+    EMOTIONAL_TRIGGER_CHOICES= [
+        ("Necessidade Básica", "Necessicade Básica"),
+        ("Planejamento/Objetivo", "Planejamento/Objetivo"),
+        ("Prazer/Entretenimento", "Prazer/Entretenimento"),
+        ("Impulso Emocional", "Impulso Emocional"),
+        ("Pressão Social/Status", "Pressão Social/Status"),
+        ("Conforto/Compulsão", "Conforto/Compulsão"),
+        ("Curiosidade/Exploração", "Curiosidade/Exploração")
+    ]
+
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     value = models.DecimalField(max_digits=10, decimal_places=2)
     date = models.DateField()
     description = models.TextField(blank=True, null= True)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank= True)
+    emotional_trigger = models.CharField(
+        max_length=30,
+        choices= EMOTIONAL_TRIGGER_CHOICES,
+        default= "Necessidade Básica"
+    )
 
     # Campo opcional de categoria
     category = models.ForeignKey(

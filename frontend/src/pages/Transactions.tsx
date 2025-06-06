@@ -9,7 +9,9 @@ interface Transaction {
     id: number,
     value: number,
     date: string,
-    description: string | null
+    description: string | null,
+    category: number | null,
+    emotional_trigger: string
 }
 
 export default function Transactions() {
@@ -29,6 +31,8 @@ export default function Transactions() {
                         <TableCell>Data</TableCell>
                         <TableCell>Descrição</TableCell>
                         <TableCell align="right">Valor (R$)</TableCell>
+                        <TableCell>Categoria</TableCell>
+                        <TableCell>Gatilho Emocional</TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
@@ -37,6 +41,8 @@ export default function Transactions() {
                             <TableCell>{r.date}</TableCell>
                             <TableCell>{r.description || '-'}</TableCell>
                             <TableCell align='right'>{r.value}</TableCell>
+                            <TableCell>{r.category ?? '-'}</TableCell>
+                            <TableCell>{r.emotional_trigger}</TableCell>
                         </TableRow>
                     ))}
                 </TableBody>

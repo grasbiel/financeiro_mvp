@@ -14,14 +14,27 @@ interface Props {
     onCreated: () => void
 }
 
-interface Category {id: number; name: string}
+interface Category {
+    id: number; 
+    name: string}
 
 interface FormData{
     value: number;
     date: string;
     description?: string;
     category?: number | null;
+    emotional_trigger: string;
 }
+
+const EMOTIONAL_TRIGGERS = [
+    "Necessidade Básica",
+    "Planejamento/Objetivo",
+    "Prazer/Entretenimento",
+    "Impulso Emocional",
+    "Pressão Social/Status",
+    "Conforto/Compulsão",
+    "Curiosidade/Exploração"
+]
 
 export default function AddTransactionDialog({open, onClose, onCreated}: Props) {
     const {control, handleSubmit, reset} = useForm<FormData>({
@@ -29,8 +42,9 @@ export default function AddTransactionDialog({open, onClose, onCreated}: Props) 
             value: 0, 
             date:'', 
             description: '', 
-            category: null
-        }
+            category: null,
+            emotional_trigger: 'Necessidade Básica'
+        },
     });
 
     const [cats, setCats] = useState<Category[]>([])
@@ -42,10 +56,18 @@ export default function AddTransactionDialog({open, onClose, onCreated}: Props) 
     }, [open])
 
     const onSubmit = async (data: FormData) => {
-        await api.post('/transactions/', { ...data, category: data.category ?? null})
-        reset()
-        onCreated()
-        onClose()
+        const payload = {
+            value: data.value,
+            date: data.date,
+            description: data.description || null,
+            category: data.category ?? null,
+            emotional_trigger: data.emotional_trigger,
+        };
+
+        await api.post('/transactions/', payload);
+        reset();
+        onCreated();
+        onClose();
     }
 
     return (
@@ -59,7 +81,7 @@ export default function AddTransactionDialog({open, onClose, onCreated}: Props) 
                         <Controller
                             name="value"
                             control = {control}
-                            rules={{required: 'Informe o valor', min: {value: -1e9, message:'Valor inválido'}}}
+                            rules={{required: true}}
                             render={({field, fieldState}) => (
                                 <TextField 
                                     {...field} 
@@ -74,14 +96,15 @@ export default function AddTransactionDialog({open, onClose, onCreated}: Props) 
                         <Controller 
                             name="date"
                             control={control}
-                            rules={{required: 'Informe a data'}}
+                            rules={{required: true}}
                             render = {({field, fieldState}) => (
-                                <TextField {...field} 
+                                <TextField 
+                                    {...field} 
                                     label = "Data" 
                                     type = "date"
                                     slotProps={{inputLabel: {shrink: true}}}
                                     error={!!fieldState.error}
-                                    helperText={fieldState.error?.message}
+                                    helperText={fieldState.error? 'Data obrigatória' :''}
                                 />
                                     
                             )}
@@ -96,6 +119,7 @@ export default function AddTransactionDialog({open, onClose, onCreated}: Props) 
                                     label = "Data"
                                     type="date"
                                     slotProps={{inputLabel: {shrink: true}}}
+                                    fullWidth
                                 />
 
                             )}
@@ -119,6 +143,24 @@ export default function AddTransactionDialog({open, onClose, onCreated}: Props) 
                                     <MenuItem value="">--</MenuItem>
                                     {cats.map(c => (
                                         <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
+                                    ))}
+                                </TextField>
+                            )}
+                        />
+
+                        <Controller
+                            name='emotional_trigger'
+                            control={control}
+                            rules={{required: true}}
+                            render={({field}) => (
+                                <TextField
+                                    {...field}
+                                    select
+                                    label="Gatilho Emocional"
+                                    fullWidth
+                                >
+                                    {EMOTIONAL_TRIGGERS.map(tr => (
+                                        <MenuItem key={tr} value={tr}>{tr}</MenuItem>
                                     ))}
                                 </TextField>
                             )}
