@@ -63,7 +63,8 @@ class TransactionSerializer (serializers.ModelSerializer):
     
     class Meta:
         model = Transaction
-        fields = ['id', 'value', 'date', 'description', 'category']
+        fields = ['id', 'value', 'date', 'description', 'category', 'emotional_trigger']
+        read_only_fields= ['id']
 
         def create(self, validated_data):
             # definimos "user" no perform_create da view

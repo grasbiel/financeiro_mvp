@@ -63,5 +63,5 @@ export default function CategoryDialog({
                 </DialogActions>
             </form>
         </Dialog>
-    );
+    );  
 }
