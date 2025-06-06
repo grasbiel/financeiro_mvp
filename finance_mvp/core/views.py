@@ -335,3 +335,25 @@ class IncomesByCategoryView(APIView):
             })
 
         return Response(results)
+    
+
+class ExpensesByEmotionalTriggerView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        qs = Transaction.objects.filter(user = request.user, value__lt=0)
+        data = (
+            qs.values('emotional_trigger').annotate(total=Sum('value'))
+        )
+
+        # retorna total como valor positivo para facilitar exibição
+        results = [
+            {
+                'emotional_trigger': item['emotional_trigger'],
+                'total_expenses': abs(item['total'])
+            }
+
+            for item in data
+        ]
+
+        return Response(results)
