@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-60)c8l62g%1zpp=u!&cpdfd640^ax3a8)v3q2edvnc4(8c162$
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['https://financeiro-mvp.onrender.com']
+ALLOWED_HOSTS = 'https://financeiro-mvp.onrender.com'
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=2),
