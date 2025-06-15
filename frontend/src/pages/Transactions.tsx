@@ -59,7 +59,7 @@ export default function Transactions() {
     const [totalCount, setTotalCount] = useState(0);
 
     const fetchCats = () => {
-        api.get<Transaction[]>('/categories/').then(res => setCats(res  .data));
+        api.get<Category[]>('/categories/').then(res => setCats(res.data));
     };
 
     const fetchData = () => {
@@ -106,6 +106,7 @@ export default function Transactions() {
             >
                 Nova Transação
             </Button>
+
             {/* Filtros */}
             <Stack direction={{xs: 'column', md: 'row'}} spacing={2} mb={2}>
                 <TextField 
@@ -121,7 +122,7 @@ export default function Transactions() {
                     type= "date"
                     value={end}
                     InputLabelProps={{shrink: true}}
-                    onChange={e => setStart(e.target.value)}
+                    onChange={e => setEnd(e.target.value)}
                 />
 
                 <TextField
@@ -158,8 +159,13 @@ export default function Transactions() {
                             {tr}
                         </MenuItem>
                     ))}
-
                 </TextField>
+                <Button
+                    variant='outlined'
+                    onClick={handleFilterSubmit}
+                >
+                    Aplicar Filtros
+                </Button>
             </Stack>
             {/* Tabela de Transações */}
             <Table>
@@ -188,15 +194,15 @@ export default function Transactions() {
             {/* PAGINAÇÃO */}
             <TablePagination
                 component="div"
-                count= {totalCount}
-                page = {page}
+                count={totalCount}
+                page={page}
                 onPageChange={(e, newPage) => setPage(newPage)}
                 rowsPerPage={rowsPerPage}
                 onRowsPerPageChange={e => {
-                    setRowsPerPage(parseInt(e.target.value, 10));
-                    setPage(0);
+                setRowsPerPage(parseInt(e.target.value, 10));
+                setPage(0);
                 }}
-                rowsPerPageOptions={[10,20,50]}
+                rowsPerPageOptions={[10, 20, 50]}
             />
 
             <AddTransactionDialog
