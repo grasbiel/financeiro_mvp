@@ -17,6 +17,8 @@ from .serializers import (
     BudgetSerializer
     )
 from django.contrib.auth.models import User
+from django_filters import rest_framework as filters
+
 
 
 class CategoryListCreateView (generics.ListCreateAPIView): 
@@ -357,3 +359,21 @@ class ExpensesByEmotionalTriggerView(APIView):
         ]
 
         return Response(results)
+
+
+class TransactionFilter(filters.FilterSet):
+    start= filters.DateFilter(field_name="date", lookup_expr='gte')
+    end = filters.DateFilter(field_name="date", lookup_expr="lte")
+    category = filters.NumberFilter(field_name='category__id')
+    emotion = filters.CharFilter(field_name="emotioinal_trigger", lookup_expr="iexact")
+
+    class Meta:
+        model = Transaction
+        fields= ['start', 'end', 'category', 'emotion']
+
+class TransactionListCreateView(generics.ListCreateAPIView):
+    serializer_class = TransactionSerializer
+    filterset_class = TransactionFilter
+
+    def get_queryset(self):
+        return Transaction.objects.filter(user = self.request.user).order_by('-date')
