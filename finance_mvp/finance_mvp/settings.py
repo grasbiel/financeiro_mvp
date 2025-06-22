@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 from datetime import timedelta
 from decouple import config
+import dj_database_url
 import os
 
 
@@ -98,17 +99,26 @@ WSGI_APPLICATION = 'finance_mvp.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
-DATABASES = {
+default_db_config  = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': config('DB_NAME'),
         'USER': config('DB_USER'),
         'PASSWORD': config('DB_PASSWORD'),
         'HOST': config('DB_HOST', default='localhost'),
-        'PORT': config('DB_PORT', default='5432'),
+        'PORT': config('DB_PORT', default='5432', cast=int)
     }
 }
+
+DATABASES = {
+    'default': dj_database_url.config(
+        default= config('DATABASE_URL', default=None),
+        conn_max_age=600
+    )
+}
+
+if not DATABASES['default']:
+    DATABASES = default_db_config
 
 
 # Password validation
