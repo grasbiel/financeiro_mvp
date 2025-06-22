@@ -46,13 +46,13 @@ class Transaction (models.Model):
     value = models.DecimalField(max_digits=10, decimal_places=2)
     date = models.DateField()
     description = models.TextField(blank=True, null= True)
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank= True)
+
     emotional_trigger = models.CharField(
         max_length=30,
         choices= EMOTIONAL_TRIGGER_CHOICES,
         default= "Necessidade Básica"
     )
-
+    
     # Campo opcional de categoria
     category = models.ForeignKey(
         Category,

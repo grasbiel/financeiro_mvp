@@ -24,16 +24,16 @@ export default function DashBoard() {
         <Container>
             <h2>Visão Geral (mês atual)</h2>
             {summary && (
-                <Grid container spacing={2}>
-                    <Grid size={{xs:12, md:4}}>
-                        <Card>
-                            <CardContent>
-                                <Typography variant='h6'>Receitas</Typography>
-                                <Typography variant='h4' color='green'>
-                                R$ {summary.receitas.toFixed(2)}
-                                </Typography>
-                            </CardContent>
-                        </Card>
+                <Grid container spacing={2}> {/*Grid container */}
+                    <Grid size={{ xs:12, md:4}}>
+                            <Card>
+                                <CardContent>
+                                    <Typography variant='h6'>Receitas</Typography>
+                                    <Typography variant='h4' color='green'>
+                                        R$ {summary.receitas.toFixed(2)}
+                                    </Typography>
+                                </CardContent>
+                            </Card>                        
                     </Grid>
                     <Grid size={{xs:12, md:4}}> {/*Grid Despesas*/}
                         <Card>
@@ -54,7 +54,7 @@ export default function DashBoard() {
                                 </Typography>
                             </CardContent>
                         </Card>
-                    </Grid> {/* Fim Grid Saldo */}
+                    </Grid> 
                 </Grid>
             )}
         </Container>
