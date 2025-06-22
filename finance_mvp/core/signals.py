@@ -28,11 +28,11 @@ def check_budget(sender, instance, **kwargs):
         return
     
     limite = -float(budget.amount_limit) # budget armazenado como positivo
-    if total_despesas <= 0 and abs(total_despesas) / limite >= 0.0:
+    if total_despesas <= 0 and (abs(total_despesas)) / limite >= 0.0:
         # enviar e-mail de alerta
         send_mail(
             subject='Alerta de Orçamento',
-            message=f'Você atingiu {abs(total_despesas)} de {budget.amount_limit} no mês atual.',
+            message=f'Você atingiu R$ {abs(total_despesas):.2f} de {budget.amount_limit:.2f} no mês atual.',
             from_email='no-reply@finance_mvp.com',
             recipient_list=[user.email],
         )

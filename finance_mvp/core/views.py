@@ -26,8 +26,7 @@ class CategoryListCreateView (generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        # Listar somente as categorias do usuário Logado
-        return Category.objects.filter(user= self.request.user)
+        return Transaction.objects.filter(user = self.request.user).order_by('-date')
     
     def perform_create(self, serializer):
         # Ao criar, definimos que a categoria pertence ao user logado
@@ -371,9 +370,3 @@ class TransactionFilter(filters.FilterSet):
         model = Transaction
         fields= ['start', 'end', 'category', 'emotion']
 
-class TransactionListCreateView(generics.ListCreateAPIView):
-    serializer_class = TransactionSerializer
-    filterset_class = TransactionFilter
-
-    def get_queryset(self):
-        return Transaction.objects.filter(user = self.request.user).order_by('-date')
