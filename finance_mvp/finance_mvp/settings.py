@@ -102,9 +102,9 @@ WSGI_APPLICATION = 'finance_mvp.wsgi.application'
 default_db_config  = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME'),
-        'USER': config('DB_USER'),
-        'PASSWORD': config('DB_PASSWORD'),
+        'NAME': config('DB_NAME', default= None),
+        'USER': config('DB_USER', default=None),
+        'PASSWORD': config('DB_PASSWORD', default=None),
         'HOST': config('DB_HOST', default='localhost'),
         'PORT': config('DB_PORT', default='5432', cast=int)
     }
