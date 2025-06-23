@@ -7,20 +7,13 @@ import {
     Link as MuiLink,
     Stack,
     Alert,
+    Grid,
 } from '@mui/material'
 
-import {useForm, Controller} from 'react-hook-form'
-import {useNavigate, Link} from 'react-router-dom'
 import {useState} from 'react'
+import {useNavigate, Link as RouterLink} from 'react-router-dom'
+import {useForm, Controller} from 'react-hook-form'
 import api from '../api/api'
-
-
-interface SignupFormData {
-    username: string;
-    email: string;
-    password: string;
-    confirmPassword: string;
-}
 
 export default function Signup() {
     const navigate = useNavigate();
@@ -31,7 +24,7 @@ export default function Signup() {
         handleSubmit,
         watch,
         formState: {errors}
-    } = useForm<SignupFormData>({
+    } = useForm({
         defaultValues: {
             username: '',
             email: '',
@@ -40,11 +33,12 @@ export default function Signup() {
         }
     });
 
-    const onSubmit= async(data: SignupFormData) => {
+    const password = watch('password');
+    const onSubmit= async(data: any) => {
         setServerError(null);
 
         try {
-            await api.post('/signup/', {
+            await api.post('/users/signup/', {
                 username: data.username,
                 email: data.email,
                 password: data.password
@@ -60,21 +54,40 @@ export default function Signup() {
         }
     };
 
-    const password = watch('password')
-
     return (
+        <Box
+            sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minHeight: '100vh'
+            }}
+        >
+
         <Container maxWidth="xs">
-            <Box sx={{mt:8, display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+            <Box 
+                sx={{
+                    mt:8, 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    alignItems: 'center',
+                    gap: 2
+
+                }}
+            >
                 <Typography component='h1' variant='h5'>
                     Cadastrar
                 </Typography>
-                <Box component='form' onSubmit={handleSubmit(onSubmit)} sx={{mt: 3}}>
-                    {serverError && <Alert severity='error'>{serverError}</Alert>}
-                    <Stack spacing={2}>
+                
+                {serverError && <Alert severity='error' sx={{width:'100%'}}>{serverError}</Alert>}
+                
+                <Box component='form' onSubmit={handleSubmit(onSubmit)} sx={{ width: '100%', mt: 1}}>
+                    
                         <Controller
                             name="username" 
                             control={control}
-                            rules={{required: 'Usuário é obrigatório'}}
+                            rules={{required: 'O nome do usuário é obrigatório'}}
                             render={({field}) => (
                                 <TextField {...field} label='Usuário' fullWidth error={!!errors.username} 
                                     helperText={errors.username?.message}
@@ -110,21 +123,26 @@ export default function Signup() {
                                 required:'Confirmação de senha é obrigatória',
                                 validate: (value) => value === password || 'As senhas não coincidem'
                             }}
-                            render={({...field}) =>(
+                            render={({field}) =>(
                                 <TextField {...field} label="Confirmar senha" type='password' fullWidth 
                                     error={!!errors.confirmPassword} helperText={errors.confirmPassword?.message}
                                 />
                             )}
                         />
-                    </Stack>
+                    
                     <Button type='submit' fullWidth variant='contained' sx={{mt:3, mb:2}}>
                         Cadastrar
                     </Button>
-                    <MuiLink component={Link} to="/login" variant='body2'>
-                        Já tem uma conta? Entre
-                    </MuiLink>
+                    <Grid container justifyContent="flex-end">
+                        <MuiLink component={RouterLink} to="/login" variant='body2'>
+                            Já tem uma conta? Entre
+                        </MuiLink>
+                    </Grid>
+                    
                 </Box>
             </Box>
         </Container>
+
+        </Box>
     );
 }
