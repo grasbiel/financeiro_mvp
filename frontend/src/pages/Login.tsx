@@ -116,7 +116,7 @@ export default function Login() {
 
                         <Grid container justifyContent={'flex-end'}>
                             <Grid>
-                                <MuiLink component={RouterLink} to="/signup" variant='body2'>
+                                <MuiLink component={RouterLink} to="/signup/" variant='body2'>
                                     Não tem uma conta? Cadastre-se
                                 </MuiLink>
                             </Grid>
