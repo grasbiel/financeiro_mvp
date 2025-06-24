@@ -12,6 +12,7 @@ import Budgets from './pages/Budgets'
 import Reports from './pages/Reports'
 import Navbar from './components/Navbar'
 import EmotionReport from './pages/EmotionReport'
+import Signup from './pages/Signup'
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
         <Navbar />
         <Routes>
           <Route path='/login' element={<Login />} />
+          <Route path='/signup' element={<Signup />} />
           <Route element={<RequireAuth />}>
             <Route path='/' element={<DashBoard />} />
             <Route path='/transactions' element={<Transactions />} />
