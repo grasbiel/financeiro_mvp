@@ -1,28 +1,32 @@
-import {AppBar, Toolbar, Button, Typography, Box, IconButton} from '@mui/material'
-import {Link, useNavigate} from 'react-router-dom'
-import {useAuth} from '../auth/AuthProvider'
+// Importação do React e React Router
 import {useContext} from 'react'
-import { ThemeToggleContext } from '../theme/ThemeProvider';
-import { Brightness7 } from '@mui/icons-material/Brightness7';
-import { Brightness4  } from '@mui/icons-material/Brightness4';
-import {Icon} from '@mui/material/'
+import {Link} from 'react-router-dom'
 
+// Importação do Material UI
+import {AppBar, Toolbar, Button, Typography, IconButton, useTheme} from '@mui/material'
+
+// Importação de Ícones(forma correta)
+import Brightness7Icon from '@mui/icons-material/Brightness7';
+import Brightness4Icon from '@mui/icons-material/Brightness4';
+
+// Importações da sua aplicação (Autenticação e Tema)
+import {useAuth} from '../auth/AuthProvider'
+import { ThemeToggleContext } from '../theme/ThemeProvider';
 
 
 export default function Navbar() {
-    const auth = useAuth();
-    const navigate = useNavigate();
+    const {user, logout} = useAuth();
+    const {toggleTheme} = useContext(ThemeToggleContext);
 
     const theme = useTheme();
-    const {toggleTheme} = useContext(ThemeToggleContext);
+  
      
-    const {user, logout} = useAuth();
-
+    
     return (
         <AppBar position='static'>
-            <Toolbar sx={{gap: 2}}> 
+            <Toolbar> 
                 <Typography variant='h6' component="div" sx={{flexGrow:1}}>FinanceApp</Typography>
-                {auth.user && (
+                {user && (
                     <>
                         <Button color='inherit' component={Link} to='/'>Dashboard</Button>
                         <Button color='inherit' component={Link} to='/transactions'>Transações</Button>
@@ -33,12 +37,18 @@ export default function Navbar() {
                         <Button color='inherit' onClick={logout} sx={{marginLeft:'auto'}}>Sair</Button>
                     </>
                 )}
-                <Box sx={{display: 'flex', alignItems:'center', marginLeft: 'auto'}}>
-                    <IconButton sx={{ml: 1}} onClick={toggleTheme} color='inherit'>
-                        {theme.palette.mode==="dark" ? <Brightness7Icon /> : <Brightness4Icon />}
-                        
-                    </IconButton>
-                </Box>
+
+                {/* Botão de Tema */}
+                <IconButton sx={{ml: 1}} onClick={toggleTheme} color='inherit'>
+                    {theme.palette.mode==="dark" ? <Brightness7Icon /> : <Brightness4Icon />}
+                </IconButton>
+
+                {/* Botão de Sair (só aparece se o usuário estiver logado) */}
+                {user && (
+                    <Button color='inherit' onClick={logout}>
+                        Sair
+                    </Button>
+                )}
             </Toolbar>
         </AppBar>
     );
