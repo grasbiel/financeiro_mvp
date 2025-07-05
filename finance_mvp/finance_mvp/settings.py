@@ -98,6 +98,7 @@ WSGI_APPLICATION = 'finance_mvp.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
+
 default_db_config  = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
