@@ -66,8 +66,4 @@ class TransactionSerializer (serializers.ModelSerializer):
         fields = ['id', 'value', 'date', 'description', 'category', 'emotional_trigger']
         read_only_fields= ['id']
 
-        def create(self, validated_data):
-            # definimos "user" no perform_create da view
-            return super().create(validated_data)
-
         
