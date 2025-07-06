@@ -3,3 +3,4 @@ __pycache__/
 .env
 .migrations/
 frontend\.env
+frontend\node_modules
