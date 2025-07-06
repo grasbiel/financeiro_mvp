@@ -64,7 +64,7 @@ export default function AddTransactionDialog({open, onClose, onCreated}: Props) 
             emotional_trigger: data.emotional_trigger,
         };
 
-        await api.post('/transactions/', payload);
+        await api.post('/api/transactions/', payload);
         reset();
         onCreated();
         onClose();
@@ -116,9 +116,8 @@ export default function AddTransactionDialog({open, onClose, onCreated}: Props) 
                             rules={{}}
                             render = {({field}) => (
                                 <TextField {... field } 
-                                    label = "Data"
-                                    type="date"
-                                    slotProps={{inputLabel: {shrink: true}}}
+                                    label = "Descrição"
+                                    type="text"
                                     fullWidth
                                 />
 
