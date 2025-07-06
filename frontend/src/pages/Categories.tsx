@@ -21,10 +21,9 @@ export default function Categories () {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [selected, setSelected] = useState<Category | null>(null);
 
-    const fetchCats = () => {
-        api.get<Category[]>('api/categories/').then((r) => {
-            setCats(r.data)
-        });
+    const fetchCats = async () => {
+        const response = await api.get('api/categories/')
+        setCats(response.data)
     };
 
     // useEffect chama fetchCats de forma síncrona
@@ -32,11 +31,15 @@ export default function Categories () {
         fetchCats();
     }, [])
 
-    const handleDelete = (id: number) => {
-        if (confirm("Excluir categoria?")) {
-            api.delete(`api/categories/${id}/`).then(()=>{
-                fetchCats();
-            });
+    const handleDelete = async (id: number) => {
+        if (window.confirm('Tem certeza que deseja deletar esta categoria?')){
+            try {
+                await api.delete(`api/categories/${id}/`)
+                fetchCats()
+            } catch(error) {
+                console.error('Erro ao deletar categoria', error)
+                alert('Não foi possível deletar a categoria')
+            }
         }
     };
 
