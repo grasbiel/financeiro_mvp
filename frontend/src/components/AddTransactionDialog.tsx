@@ -64,10 +64,20 @@ export default function AddTransactionDialog({open, onClose, onCreated}: Props) 
             emotional_trigger: data.emotional_trigger,
         };
 
-        await api.post('/transactions/', payload);
-        reset();
-        onCreated();
-        onClose();
+        try {
+            await api.post('api/transactions/', payload);
+            reset();
+            onCreated();
+            onClose();
+        } catch (error: any) {
+            console.error("Erro ao criar transação: ", error)
+
+            const errorMessage = error.response?.data?.detail ||
+                                error.response?.data?.category ||
+                                "Ocorreu um erro ao salvar. Verifique os dados ou o orçamento "
+            alert(errorMessage)
+        }
+        
     }
 
     return (

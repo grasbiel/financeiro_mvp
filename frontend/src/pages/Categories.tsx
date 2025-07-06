@@ -22,7 +22,7 @@ export default function Categories () {
     const [selected, setSelected] = useState<Category | null>(null);
 
     const fetchCats = () => {
-        api.get<Category[]>('/categories/').then((r) => {
+        api.get<Category[]>('api/categories/').then((r) => {
             setCats(r.data)
         });
     };
@@ -34,7 +34,7 @@ export default function Categories () {
 
     const handleDelete = (id: number) => {
         if (confirm("Excluir categoria?")) {
-            api.delete(`/categories/${id}/`).then(()=>{
+            api.delete(`api/categories/${id}/`).then(()=>{
                 fetchCats();
             });
         }

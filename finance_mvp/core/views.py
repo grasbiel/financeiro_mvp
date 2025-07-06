@@ -53,6 +53,24 @@ class TransactionListCreateView(generics.ListCreateAPIView):
     serializer_class = TransactionSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        category = serializer.validated_data.get('category')
+        if category and category.user != self.request.user:
+            raise serializers.ValidationError({"category": "Categoria inválida ou não pertence a este usuário"})
+        
+        value = serializer.validated_data.get('value')
+
+        if value < 0:
+            date = serializer.validated_data.get('date')
+            self.check_budget(date,category, abs(value))
+        
+        self.perform_create(serializer)
+        headers= self.get_success_headers(serializer.data)
+        return Response(serializer.data,  status=status.HTTP_201_CREATED, headers=headers)
+    
     def get_queryset(self):
         # Retorna as transações do Usuário logado
         return Transaction.objects.filter(user=self.request.user).order_by('-date')
