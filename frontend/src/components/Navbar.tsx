@@ -42,13 +42,6 @@ export default function Navbar() {
                 <IconButton sx={{ml: 1}} onClick={toggleTheme} color='inherit'>
                     {theme.palette.mode==="dark" ? <Brightness7Icon /> : <Brightness4Icon />}
                 </IconButton>
-
-                {/* Botão de Sair (só aparece se o usuário estiver logado) */}
-                {user && (
-                    <Button color='inherit' onClick={logout}>
-                        Sair
-                    </Button>
-                )}
             </Toolbar>
         </AppBar>
     );
