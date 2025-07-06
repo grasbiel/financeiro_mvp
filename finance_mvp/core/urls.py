@@ -20,7 +20,7 @@ urlpatterns = [
     path('signup/', SignupView.as_view(), name='signup'),
 
     # Login via JWT
-    path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
 
     # Refresh do token
     path('refresh/', TokenRefreshView.as_view(), name='token_refresh'),
