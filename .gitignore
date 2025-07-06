@@ -1,6 +1,8 @@
 venv/
 __pycache__/
 .env
-.migrations/
+finance_mvp\.env
 frontend\.env
 frontend\node_modules
+node_modules
+.migrations/
