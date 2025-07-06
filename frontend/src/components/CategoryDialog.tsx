@@ -22,7 +22,7 @@ export default function CategoryDialog({
 
     const onSubmit = async ({name} : {name: string}) => {
         if (initial) {
-            await api.put(`/categories/${initial.id}`, {name});
+            await api.put(`/categories/${initial.id}/`, {name});
         } else {
             await api.post('/categories/', {name});
         }
