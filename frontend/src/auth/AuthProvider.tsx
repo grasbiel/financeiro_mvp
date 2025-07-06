@@ -1,43 +1,69 @@
 import {
-    createContext, useContext, ReactNode, useState
+    createContext, useState, useEffect
 } from 'react';
 import {useNavigate} from 'react-router-dom';
 import api from '../api/api';
 
-interface User {username: String}
-interface AuthCtxType {
-    user: User | null;
-    login: (u: string, p: string) => Promise<void>;
-    logout: () => void;
-}
+export const AuthContext = createContext<any> (null);
 
-const AuthCtx = createContext<AuthCtxType | null> (null);
-
-export function AuthProvider({children}: {children: ReactNode}) {
+export const AuthProvider= ({children} : any) => {
     const navigate = useNavigate();
-    const [user, setUser] = useState<User | null> (
-        JSON.parse(localStorage.getItem('user') || 'null'),
-    );
+    const [user, setUser] = useState<any>(null)
+    const [loading, setLoading] = useState(true)        
 
-    const login = async (username: string, password: string) => {
-        const { data} = await api.post('/api/login/', {username, password});
-        localStorage.setItem('token', data.access);
-        localStorage.setItem('user', JSON.stringify({username}));
-        setUser({username});
-        navigate('/');
-    };
+    useEffect(() => {
+        const recoverUser = async() => {
+            const token = localStorage.getItem('accessToken')
+            if (token){
+                api.defaults.headers.common['Authorization'] = `Bearer ${token}`
+                setUser({token})
+            }
+            setLoading(false)
+        }
+        recoverUser()
+    }, [])
     
+    const login = async (email: string, password: string) => {
+        try{
+            const response = await api.post("api/token/", {email, password})
+            const {access, refresh} = response.data
+
+            localStorage.setItem("accessToken", access)
+            localStorage.setItem("refreshToken", refresh)
+            
+            api.defaults.headers.common['Authorization'] = `Bearer ${access}`
+            setUser({email})
+            navigate("/")
+
+        } catch (error) {
+            console.error("Erro no login:", error)
+            alert("Falha no login. Verifique seu email e senha")
+        }
+    };
+    const signup = async (data:any) => {
+        try {
+            await api.post("api/signup/", data)
+            alert("Cadastro realizado com sucesso! Você já pode fazer o login")
+            navigate("/login")
+        } catch (error: any) {
+            console.error("Erro no sigunp: ", error)
+            const errorMessage = error.response?.data?.email?.[0] || "Erro ao realizar o cadastro. Tente novamente"
+            alert(errorMessage)
+        }
+    }
+
     const logout = () => {
-        localStorage.clear();
-        setUser(null);
-        navigate('/login');
+        localStorage.removeItem("accessToken")
+        localStorage.removeItem("refreshToken")
+        api.defaults.headers.common['Authorization'] = ''
+        setUser(null)
+        navigate("/login")
     };
 
-    return <AuthCtx.Provider value = {{user, login, logout}}> {children}</AuthCtx.Provider>
+    return(
+        <AuthContext.Provider value = {{authenticated: !!user, user, loading, login, signup, logout}}>
+             {children}
+        </AuthContext.Provider>
+    ) 
  }
  
- export const useAuth = () => {
-    const ctx = useContext(AuthCtx);
-    if (!ctx) throw new Error('useAuth deve estar dentro do AuthProvider');
-    return ctx;
- }
