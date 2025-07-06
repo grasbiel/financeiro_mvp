@@ -23,16 +23,16 @@ export const AuthProvider= ({children} : any) => {
         recoverUser()
     }, [])
     
-    const login = async (email: string, password: string) => {
+    const login = async (username: string, password: string) => {
         try{
-            const response = await api.post("api/token/", {email, password})
+            const response = await api.post("api/token/", {username, password})
             const {access, refresh} = response.data
 
             localStorage.setItem("accessToken", access)
             localStorage.setItem("refreshToken", refresh)
             
             api.defaults.headers.common['Authorization'] = `Bearer ${access}`
-            setUser({email})
+            setUser({username})
             navigate("/")
 
         } catch (error) {
