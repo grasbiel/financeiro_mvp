@@ -12,7 +12,6 @@ from .views import (
     BudgetListCreateView,
     ExpensesByCategoryView,
     IncomesByCategoryView,
-    ExpensesByCategoryView,
     ExpensesByEmotionalTriggerView
 )
 
