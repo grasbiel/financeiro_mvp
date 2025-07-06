@@ -30,10 +30,11 @@ class TransactionAPITest(TestCase):
         self.user = User.objects.create_user('teste', password='123456')
 
         # pegar token
-        resp = self.client.post('/api/login/', {
-            'username': 'teste',
-            'password': '123456'
-        }, format= 'json')
+        resp = self.client.post(
+            '/api/login/',
+            {'username': 'teste', 'password': '123456'},
+            format='json'
+        )
 
         self.token= resp.data['access']
 
@@ -81,7 +82,7 @@ class APITestCase(TestCase):
 
         # Fazer login e pegar token
         resp = self.client.post(
-            '/api/login',
+            '/api/login/',
             {'username': 'teste', 'password': '123456'},
             format='json'
         )
@@ -155,7 +156,7 @@ class ReportsAPITestCase (TestCase):
 
         resp = self.client.post(
             '/api/login/',
-            {'username': 'teste', 'password': '123456'},
+             {'username': 'teste', 'password': '123456'},
             format='json'
         )
 
