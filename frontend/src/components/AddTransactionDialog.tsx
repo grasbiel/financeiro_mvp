@@ -64,7 +64,7 @@ export default function AddTransactionDialog({open, onClose, onCreated}: Props) 
             emotional_trigger: data.emotional_trigger,
         };
 
-        await api.post('/api/transactions/', payload);
+        await api.post('/transactions/', payload);
         reset();
         onCreated();
         onClose();
