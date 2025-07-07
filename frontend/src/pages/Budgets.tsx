@@ -12,7 +12,7 @@ import {
 } from '@mui/material';
 import { useEffect, useState } from 'react';
 import api from '../api/api';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm,Controller } from 'react-hook-form';
 
 interface Category {
   id:number,
@@ -34,7 +34,7 @@ interface FormData {
 }
 
 
-export const Budgets = ()  => {
+export default function Budgets() {
   const [budgets, setBudgets] = useState<Budget[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)

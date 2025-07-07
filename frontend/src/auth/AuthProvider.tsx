@@ -1,10 +1,15 @@
 import {
-    createContext, useState, useEffect
+    createContext, useState, useEffect,
+    useContext
 } from 'react';
 import {useNavigate} from 'react-router-dom';
 import api from '../api/api';
 
 export const AuthContext = createContext<any> (null);
+
+export const useAuth = () => {
+    return useContext(AuthContext)
+}
 
 export const AuthProvider= ({children} : any) => {
     const navigate = useNavigate();
