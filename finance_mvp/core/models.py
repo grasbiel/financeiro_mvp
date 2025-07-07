@@ -1,4 +1,6 @@
 from django.db import models
+from django.contrib.auth.models import User
+from django.db.models import UniqueConstraint, Q
 import datetime
 
 # Create your models here.
@@ -15,10 +17,19 @@ class Category(models.Model):
 class Budget(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     category = models.ForeignKey('Category', on_delete=models.SET_NULL, null= True, blank= True)
-    amount_limit = models.DecimalField(max_digits=10, decimal_places=2)
+    value = models.DecimalField(max_digits=10, decimal_places=2)
+    start_date = models.DateField()
+    end_date = models.DateField()
+
     
-    month= models.IntegerField(default=12) # 1-12 e define um default
-    year= models.IntegerField(default=2025) # 2025 define um default
+    class Meta:
+        constraints = [
+            UniqueConstraint(
+                fields=['user', 'category'],
+                condition = Q(start_date__month = models.F('end_date__month')),
+                name= 'unique_mothly_budget_for_category'
+            )
+        ]
 
     def __str__(self):
         cat_name = self.category.name if self.category else "Geral"

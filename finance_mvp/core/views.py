@@ -141,41 +141,33 @@ class TransactionRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView
     def get_queryset(self):
         return Transaction.objects.filter(user=self.request.user)
         
-    def check_budget(date, self, category, value, transaction_id=None):
-        if not category:
-            return
-        budget = Budget.objects.filter(
-            user= self.request.user,
-            category = category,
-            start_date__lte = date,
-            end_date_gte = date
-        ).first()
-
-        if not budget:
-            return
-        
-        # Calcula as despesas atuais no período do orçamento
-        current_expenses_query = Transaction.objects.filter(
+    def check_budget_on_update(self, trans_date, category, new_expense_value, instance):
+        budgets = Budget.objects.filter(
             user = self.request.user,
-            category= category,
-            date__gte = budget.start_date,
-            date__lte = budget.end_date,
-            value__lt = 0
+            category = category,
+            start_date__lte = trans_date,
+            end_date__gte = trans_date
         )
 
-        # Se estiver atualizando uma transação, exclui o valor antigo do cálculo
-        if transaction_id:
-            current_expenses_query = current_expenses_query.exclude(id= transaction_id)
-
-        current_expenses= current_expenses_query.aggregate(total=Sum('value'))['total'] or 0
-        current_expenses= abs(current_expenses)
-
-        # Verifica se o novo valor somado às despesas atuais excede o orçamento
-        if current_expenses + value > budget.amount:
-            raise serializers.ValidationError(
-                f"Esta transação excede o orçamento de R$ {budget.amount:.2f} para a categoria '{category.name}'"
-            )
+        if not budgets.exists():
+            return
         
+        budget = budgets.first()
+
+        total_expenses = Transaction.objects.filter(
+            user = self.request.user,
+            category = category,
+            date__range = (budget.start_date, budget.end_date),
+            value__lt = 0
+        ).exclude(pk=instance.pk).aggregate(total=Sum('value'))['total'] or 0
+
+        total_spent_without_this = abs(total_expenses)
+
+        if (total_spent_without_this + new_expense_value) > budget.value:
+            raise serializers.ValidationError(
+                f"A atualização desta transação excede o orçamento de R$ {budget.value: .2f}"
+                f"para a categoria '{category.name}'"
+            )
 
     # Atualização de transação, aplicando a verificação de orçamento
     def perform_update(self, serializer):
@@ -183,19 +175,18 @@ class TransactionRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView
         # Pega a instância de transação que está sendo atualizada
         instance = self.get_object()
 
-        # Pega os dados validados. Usa os dados da instância como padrão se não forem passados
-        category = serializer.validated_data.get('category', instance.category)
-        value = serializer.validated_data.get('value', instance.value)
-        date = serializer.validated_data.get('date', instance.date)
+        new_value = serializer.validated_data.get('value', instance.value)
 
-        # Valida se a categoria (se informada) pertence ao usuário
-        if 'category' in serializer.validated_data and category and category.user != self.request.user:
-            raise serializers.ValidationError("Categoria inválida para este usuário")
-        
-        # Se o valor for negativo (uma despesa), verifica o orçamento
-        if value < 0:
-            self.check_budget(date, category, abs(value), transaction_id= instance.id)
-        
+        if new_value < 0:
+            new_date = serializer.validated_data.get('date', instance.date)
+            new_category = serializer.validated_data.get('category', instance.category)
+
+            # Valida se a categoria (se foi alterada) pertence ao usuário
+            if 'category' in serializer.validated_data and new_category.user != self.request.user:
+                raise serializers.ValidationError("Você só pode usar suas próprias categorias")
+            
+            expense_value = abs(new_value)
+            self.check_budget_on_update(new_date, new_category, expense_value, instance)
         serializer.save()
             
     
