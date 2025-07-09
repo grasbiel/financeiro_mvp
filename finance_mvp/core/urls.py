@@ -1,5 +1,5 @@
 from django.urls import path
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenBlacklistView
 
 from .views import (
     SignupView,
@@ -45,5 +45,5 @@ urlpatterns = [
 
     path('reports/expenses_by_emotion/', ExpensesByEmotionalTriggerView.as_view(), name="expenses-by-emotion"),
 
-    path('token/blacklist/', TokenObtainPairView.as_view(), name='token_blacklist'),
+    path('token/blacklist/', TokenBlacklistView.as_view(), name='token_blacklist'),
 ]   
