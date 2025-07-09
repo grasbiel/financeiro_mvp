@@ -22,7 +22,7 @@ export default function DashBoard() {
     useEffect(() => {
         const fetchSummary = async () => {
             try{
-                const response = await api.get('api/transactions/summary/')
+                const response = await api.get('transactions/summary/')
                 setSummary(response.data)
             } catch (error) {
                 console.error("Erro ao buscar o resumo mensal: " , error)
