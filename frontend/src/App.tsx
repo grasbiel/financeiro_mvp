@@ -1,7 +1,6 @@
 import {
-  BrowserRouter, Routes, Route,
+  Routes, Route,
 } from 'react-router-dom'
-import { AuthProvider } from './auth/AuthProvider'
 import RequireAuth from './auth/RequireAuth'
 
 import Login from './pages/Login'
@@ -16,23 +15,21 @@ import Signup from './pages/Signup'
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <Navbar />
-        <Routes>
-          <Route path='/login' element={<Login />} />
-          <Route path='/signup' element={<Signup />} />
-          <Route element={<RequireAuth />}>
-            <Route path='/' element={<DashBoard />} />
-            <Route path='/transactions' element={<Transactions />} />
-            <Route path='/categories' element={<Categories />} />
-            <Route path ='/budgets' element={<Budgets />} />
-            <Route path ='/reports' element={<Reports />} />
-            <Route path ='/emotion-report' element= {<EmotionReport/>} /> 
-          </Route>
-        </Routes>
-      </AuthProvider>
-    </BrowserRouter>
+    <>
+      <Navbar />
+      <Routes>
+        <Route path='/login' element={<Login />} />
+        <Route path='/signup' element={<Signup />} />
+        <Route element={<RequireAuth />}>
+          <Route path='/' element={<DashBoard />} />
+          <Route path='/transactions' element={<Transactions />} />
+          <Route path='/categories' element={<Categories />} />
+          <Route path ='/budgets' element={<Budgets />} />
+          <Route path ='/reports' element={<Reports />} />
+          <Route path ='/emotion-report' element= {<EmotionReport/>} /> 
+        </Route>
+      </Routes>
+    </>
   );
 }
 

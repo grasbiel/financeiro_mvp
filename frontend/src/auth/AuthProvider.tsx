@@ -59,7 +59,7 @@ export const AuthProvider= ({children} : any) => {
 
     const logout = async () => {
         try{
-            const refreshToken = localStorage.getItem("refresh_token");
+            const refreshToken = localStorage.getItem("refreshToken");
             if(refreshToken) {
                 await api.post('/api/token/blacklist/', {refresh: refreshToken})
             }
@@ -68,8 +68,8 @@ export const AuthProvider= ({children} : any) => {
         } finally {
             // Limpa todo o storage independemente do resultado da API
             api.defaults.headers.common['Authorization'] = null;
-            localStorage.removeItem("access_token");
-            localStorage.removeItem("refresh_token");
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("refreshToken");
             setUser(null);
         }
     };
