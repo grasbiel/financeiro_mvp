@@ -24,7 +24,7 @@ export default function AddBudgetDialog ({open, onClose, onCreated}: Props){
     });
     
     const onSubmit = async (data: BudgetForm) => {
-        await api.post('/budgets/', data);
+        await api.post('budgets/', data);
         reset();
         onCreated();
         onClose();
