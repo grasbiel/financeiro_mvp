@@ -14,7 +14,7 @@ export default function Reports() {
 
     useEffect(() => {
         api
-            .get<ReportItem[]>('/reports/expenses_by_category/')
+            .get<ReportItem[]>('reports/expenses_by_category/')
             .then(res => setData(res.data))
     }, [])
 

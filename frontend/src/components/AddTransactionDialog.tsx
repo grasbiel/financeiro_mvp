@@ -51,7 +51,7 @@ export default function AddTransactionDialog({open, onClose, onCreated}: Props) 
 
     useEffect(() => {
         if (open) {
-            api.get<Category[]>('/categories/').then(res => setCats(res.data))
+            api.get<Category[]>('categories/').then(res => setCats(res.data))
         }
     }, [open])
 
@@ -65,7 +65,7 @@ export default function AddTransactionDialog({open, onClose, onCreated}: Props) 
         };
 
         try {
-            await api.post('api/transactions/', payload);
+            await api.post('transactions/', payload);
             reset();
             onCreated();
             onClose();
