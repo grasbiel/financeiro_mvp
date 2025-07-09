@@ -10,11 +10,13 @@ import {
 } from '@mui/material'
 
 import {useState} from 'react'
-import {useNavigate, Link as RouterLink} from 'react-router-dom'
+import {useNavigate, Link as RouterLink, Navigate} from 'react-router-dom'
 import {useForm, Controller} from 'react-hook-form'
 import api from '../api/api'
+import { useAuth } from '../auth/AuthProvider'
 
 export default function Signup() {
+    const {user}= useAuth()
     const navigate = useNavigate();
     const [serverError, setServerError] = useState<string | null>(null)
 
@@ -32,6 +34,9 @@ export default function Signup() {
         }
     });
 
+    if (user) {
+        return <Navigate to="/" replace />
+    }
     const password = watch('password');
     const onSubmit= async(data: any) => {
         setServerError(null);

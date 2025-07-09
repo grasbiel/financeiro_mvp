@@ -11,12 +11,12 @@ import {
 
 import {useState} from 'react'
 import {useAuth} from '../auth/AuthProvider'
-import {Link as RouterLink} from 'react-router-dom';
+import {Navigate, Link as RouterLink} from 'react-router-dom';
 import {useForm, Controller} from 'react-hook-form';
 
 
 export default function Login() {
-    const {login} = useAuth()
+    const {login, user} = useAuth()
     const [error, setError] = useState<string | null>(null)
 
     const{
@@ -30,6 +30,9 @@ export default function Login() {
         },
     });
 
+    if (user) {
+        return <Navigate to="/" replace/>
+    }
 
     // A função de submit recebe os dados do react-hook-form
     const onSubmit = async (data: any) => {
