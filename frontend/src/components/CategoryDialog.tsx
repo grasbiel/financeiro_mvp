@@ -5,7 +5,7 @@ import {
 
 import {useForm, Controller} from 'react-hook-form'
 import api from '../api/api'
-
+import { useEffect } from 'react'
 interface Props {
     open: boolean,
     onClose: ()=> void;
@@ -19,6 +19,12 @@ export default function CategoryDialog({
     const {control, handleSubmit, reset} = useForm<{name: string}>({
         defaultValues: {name: initial?.name ?? ''},
     });
+
+    useEffect(() => {
+        if (open) {
+            reset({name: initial?.name ?? ''});
+        }
+    }, [initial, open, reset])
 
     const onSubmit = async ({name} : {name: string}) => {
         if (initial) {
