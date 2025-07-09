@@ -26,7 +26,7 @@ class CategoryListCreateView (generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return Transaction.objects.filter(user = self.request.user).order_by('-date')
+        return Category.objects.filter(user = self.request.user).order_by('name')
     
     def perform_create(self, serializer):
         # Ao criar, definimos que a categoria pertence ao user logado
