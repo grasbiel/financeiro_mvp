@@ -25,8 +25,7 @@ from django_filters import rest_framework as filters
 
 class CategoryListCreateView (generics.ListCreateAPIView): 
     serializer_class = CategorySerializer
-    #permission_classes = [permissions.IsAuthenticated]
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         return Category.objects.filter(user = self.request.user).order_by('name')
