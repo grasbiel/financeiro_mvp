@@ -30,7 +30,7 @@ export const AuthProvider= ({children} : any) => {
     
     const login = async (username: string, password: string) => {
         try{
-            const response = await api.post("api/token/", {username, password})
+            const response = await api.post("token/", {username, password})
             const {access, refresh} = response.data
 
             localStorage.setItem("accessToken", access)
@@ -47,7 +47,7 @@ export const AuthProvider= ({children} : any) => {
     };
     const signup = async (data:any) => {
         try {
-            await api.post("api/signup/", data)
+            await api.post("signup/", data)
             alert("Cadastro realizado com sucesso! Você já pode fazer o login")
             navigate("/login")
         } catch (error: any) {
@@ -61,7 +61,7 @@ export const AuthProvider= ({children} : any) => {
         try{
             const refreshToken = localStorage.getItem("refreshToken");
             if(refreshToken) {
-                await api.post('/api/token/blacklist/', {refresh: refreshToken})
+                await api.post('token/blacklist/', {refresh: refreshToken})
             }
         } catch (e) {
             console.error("Logout failed", e)
