@@ -44,7 +44,6 @@ export default function DashBoard() {
             <Typography variant="h4" component="h1" gutterBottom>
                 Dashboard Mensal
             </Typography>
-                // O Grid "container" envolve os Grids filhos
                 <Grid container spacing={3}>
                     {/* CORREÇÃO: A propriedade 'item' foi removida. 
                       As propriedades de breakpoint (xs, md) são aplicadas diretamente.
