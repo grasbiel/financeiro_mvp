@@ -176,9 +176,13 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://localhost:5173').split(',')
+CORS_ALLOWED_ORIGINS = [
+    "https://mvpfinance.netlify.app",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
 
-
+CORS_ALLOW_CREDENTIALS = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE= 'whitenoise.storage.CompressedManifestStaticFilesStorage'
