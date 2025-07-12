@@ -46,8 +46,8 @@ export default function Budgets() {
       setLoading(true)
 
       const [budgetsResponse, categoriesResponse] = await Promise.all([
-        api.get('api/budgets/'),
-        api.get('api/categories/')
+        api.get('budgets/'),
+        api.get('categories/')
       ]);
       setBudgets(budgetsResponse.data)
       setCategories(categoriesResponse.data)
@@ -64,7 +64,7 @@ export default function Budgets() {
 
   const handleSave= async (data: FormData) => {
     try{
-      await api.post('api/budgets/', data);
+      await api.post('budgets/', data);
       alert("Orçamento salvo com sucesso")
       reset();
       fetchData();
