@@ -43,7 +43,7 @@ class Budget(models.Model):
 
 class Transaction (models.Model):
     EMOTIONAL_TRIGGER_CHOICES= [
-        ("Necessidade Básica", "Necessicade Básica"),
+        ("Necessidade Básica", "Necessidade Básica"),
         ("Planejamento/Objetivo", "Planejamento/Objetivo"),
         ("Prazer/Entretenimento", "Prazer/Entretenimento"),
         ("Impulso Emocional", "Impulso Emocional"),

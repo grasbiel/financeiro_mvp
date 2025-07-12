@@ -1,3 +1,5 @@
+from django.db.models import Sum, Q, DecimalField
+from django.db.models.functions import Coalesce
 from django.shortcuts import render
 
 # Create your views here.
@@ -208,8 +210,32 @@ class MonthlySummaryView(APIView):
         # Ajustamos o início e fim do mês
         month_start = datetime.date(year, month, 1)
         # Para o fim, poderíamos usar calendar, mas simplificando:
-        month_end = datetime.date(year, month, 28) + datetime.timedelta(days=4)
+        next_month = month_start.replace(day=28) + datetime.timedelta(day=4)
         month_end = month_end - datetime.timedelta
+
+        transactions = Transaction.objects.filter(
+            user = user,
+            date__range=[month_start,month_end]
+        )
+
+        receitas = transactions.filter(value__gte=0).aggregate(
+            total=Coalesce(Sum('value'),0, output_field=DecimalField())
+        )['total']
+
+        despesas= transactions.filter(value__lt=0).aggregate(
+            total=Coalesce(Sum('value'), 0, output_field=DecimalField())
+        )['total']
+
+        despesas_abs = abs(despesas)
+
+        saldo = receitas + despesas
+
+        summary_data = {
+            'receitas': receitas,
+            'despesas': despesas_abs,
+            'saldo': saldo
+        }
+        return Response(summary_data)
 
 class BudgetListCreateView (generics.ListCreateAPIView):
     serializer_class = BudgetSerializer
