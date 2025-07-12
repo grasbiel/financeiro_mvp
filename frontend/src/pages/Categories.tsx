@@ -3,7 +3,8 @@ import {
     List, 
     ListItem, 
     ListItemText,
-    IconButton
+    IconButton,
+    Typography
 } from '@mui/material'
 import { useEffect, useState } from 'react'
 import DeleteIcon from '@mui/icons-material/Delete'
@@ -18,24 +19,41 @@ interface Category {
 
 export default function Categories () {
     const [cats, setCats] = useState<Category[]>([]);
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
     const [dialogOpen, setDialogOpen] = useState(false);
     const [selected, setSelected] = useState<Category | null>(null);
 
-    const fetchCats = async () => {
-        const response = await api.get('/categories/')
-        setCats(response.data)
-    };
+    const fetchCategories = async () => {
+        try{
+            const response = await api.get<Category[]>('/categories/');
+            setCats(response.data);
+        } catch (err) {
+            setError("Não foi possível carregar as categorias. Tente novamente")
+            console.error("Erro ao buscar as categorias: ", err)
+        } finally {
+            setLoading(false)
+        }
 
-    // useEffect chama fetchCats de forma síncrona
-    useEffect(() => {
-        fetchCats();
+    }
+    useEffect(() =>{
+        fetchCategories()
     }, [])
 
+    if (loading) {
+        return <Typography sx={{p:2}}>Carregando categorias...</Typography>
+    }
+
+    if (error) {
+        return <Typography color='error' sx={{p:2}}>{error}</Typography>
+    }
+
+    
     const handleDelete = async (id: number) => {
         if (window.confirm('Tem certeza que deseja deletar esta categoria?')){
             try {
                 await api.delete(`/categories/${id}/`)
-                fetchCats()
+                fetchCategories()
             } catch(error) {
                 console.error('Erro ao deletar categoria', error)
                 alert('Não foi possível deletar a categoria')
@@ -87,7 +105,7 @@ export default function Categories () {
             <CategoryDialog 
                 open={dialogOpen}
                 onClose={() => setDialogOpen(false)}
-                onSaved={fetchCats}
+                onSaved={fetchCategories}
                 initial={selected}
             />
         </Container>
