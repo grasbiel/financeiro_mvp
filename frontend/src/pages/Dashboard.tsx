@@ -12,7 +12,7 @@ interface SummaryData {
     saldo: number
 }
 
-export function DashBoard() {
+export default function DashBoard() {
     const [summaryData, setSummary] = useState<SummaryData | null > (null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState< string | null>(null)

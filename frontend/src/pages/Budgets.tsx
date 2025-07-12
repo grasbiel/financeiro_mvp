@@ -23,7 +23,7 @@ interface Budget {
   end_date: string;
 }
 
-export function Budgets() {
+export default function Budgets() {
   const [budgets, setBudgets] = useState<Budget[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
