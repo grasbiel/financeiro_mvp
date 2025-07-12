@@ -1,7 +1,8 @@
-from django.urls import path
+from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenBlacklistView
-
+from rest_framework.routers import DefaultRouter
 from .views import (
+    CategoryViewSet,
     SignupView,
     TransactionListCreateView,
     TransactionRetrieveUpdateDestroyView,
@@ -12,10 +13,19 @@ from .views import (
     BudgetListCreateView,
     ExpensesByCategoryView,
     IncomesByCategoryView,
-    ExpensesByEmotionalTriggerView
+    ExpensesByEmotionalTriggerView,
+    MonthlySummaryView,
+    TransactionViewSet,
+    BudgetViewSet,
+    CreateUserView,
 )
+router = DefaultRouter()
+router.register(r'categories', CategoryViewSet, basename='category')
+router.register(r'transactions', TransactionViewSet, basename='transaction')
+router.register(r'budgets', BudgetViewSet, basename='budget')
 
 urlpatterns = [
+    path('', include(router.urls)),
     # Cadastro de Usuário
     path('signup/', SignupView.as_view(), name='signup'),
 
@@ -46,4 +56,7 @@ urlpatterns = [
     path('reports/expenses_by_emotion/', ExpensesByEmotionalTriggerView.as_view(), name="expenses-by-emotion"),
 
     path('token/blacklist/', TokenBlacklistView.as_view(), name='token_blacklist'),
+
+    path('register/', CreateUserView.as_view(), name='register'),
+    path('monthly-summary/', MonthlySummaryView.as_view(), name='monthly-summary')
 ]   
