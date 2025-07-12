@@ -22,7 +22,7 @@ export default function Categories () {
     const [selected, setSelected] = useState<Category | null>(null);
 
     const fetchCats = async () => {
-        const response = await api.get('categories/')
+        const response = await api.get('/categories/')
         setCats(response.data)
     };
 
@@ -34,7 +34,7 @@ export default function Categories () {
     const handleDelete = async (id: number) => {
         if (window.confirm('Tem certeza que deseja deletar esta categoria?')){
             try {
-                await api.delete(`categories/${id}/`)
+                await api.delete(`/categories/${id}/`)
                 fetchCats()
             } catch(error) {
                 console.error('Erro ao deletar categoria', error)
