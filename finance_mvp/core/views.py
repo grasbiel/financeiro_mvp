@@ -5,7 +5,7 @@ from django.shortcuts import render
 # Create your views here.
 
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import generics, permissions, serializers, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from django.http import JsonResponse
@@ -37,13 +37,15 @@ class CategoryListCreateView (generics.ListCreateAPIView):
         serializer.save(user=self.request.user)
 
 class UserViewSet (viewsets.ModelViewSet):
-    queryset = User.objects.all().order_by('-date_joined')
+    queryset = User.objects.all()
     serializer_class = UserSerializer
 
     def get_permissions(self):
         if self.action == 'create':
-            return [permissions.AllowAny()]
-        return [permissions.IsAuthenticated()]
+            self.permission_classes = [AllowAny]
+        else:
+            self.permission_classes = [IsAuthenticated]
+        return super().get_permissions()
 class CategoryRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = CategorySerializer
     permission_classes = [permissions.IsAuthenticated]
