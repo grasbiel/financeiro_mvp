@@ -22,7 +22,10 @@ router.register(r'users', UserViewSet, basename='user')
 
 urlpatterns = [
     path('', include(router.urls)),
-    # Cadastro de Usuário
+    
+    path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('token/blacklist/', TokenBlacklistView.as_view(),name='token_blacklist'),
     path('check-budget/', check_budget, name='check-budget'),
     path('reports/expenses-by-category', ExpensesByCategoryView.as_view(), name="expenses-by-category"),
     path('reports/incomes-by-category/', IncomesByCategoryView.as_view(), name='incomes-by-category'),
