@@ -7,6 +7,8 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import generics, permissions, serializers, viewsets
+from rest_framework.decorators import api_view, permission_classes
+from django.http import JsonResponse
 from rest_framework.response import Response
 from django.utils import timezone
 from django.db.models import Sum, Q
@@ -34,6 +36,14 @@ class CategoryListCreateView (generics.ListCreateAPIView):
         # Ao criar, definimos que a categoria pertence ao user logado
         serializer.save(user=self.request.user)
 
+class UserViewSet (viewsets.ModelViewSet):
+    queryset = User.objects.all().order_by('-date_joined')
+    serializer_class = UserSerializer
+
+    def get_permissions(self):
+        if self.action == 'create':
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]
 class CategoryRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = CategorySerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -251,8 +261,8 @@ class MonthlySummaryView(APIView):
         # Ajustamos o início e fim do mês
         month_start = datetime.date(year, month, 1)
         # Para o fim, poderíamos usar calendar, mas simplificando:
-        next_month = month_start.replace(day=28) + datetime.timedelta(day=4)
-        month_end = month_end - datetime.timedelta
+        next_month = month_start.replace(day=28) + datetime.timedelta(days=4)
+        month_end = next_month - datetime.timedelta(days=next_month.day)
 
         transactions = Transaction.objects.filter(
             user = user,
@@ -443,3 +453,82 @@ class TransactionFilter(filters.FilterSet):
         model = Transaction
         fields= ['start', 'end', 'category', 'emotion']
 
+class EmotionalSpendingView(APIView):
+    """
+    View para calcular o total de gastos por gatilho emocional.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        # Agrupa as transações por 'emotional_trigger' e soma os valores
+        data = (
+            Transaction.objects
+            .filter(user=request.user, type='expense')
+            .values('emotional_trigger')
+            .annotate(total=Sum('amount'))
+            .order_by('-total')
+        )
+        return Response(data)
+    
+class NeedsVsWantsView(APIView):
+    """
+    View para comparar o total de gastos entre necessidades e desejos.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        # Agrupa as transações por 'purchase_type' e soma os valores
+        data = (
+            Transaction.objects
+            .filter(user=request.user, type='expense')
+            .values('purchase_type')
+            .annotate(total=Sum('amount'))
+            .order_by('purchase_type')
+        )
+        return Response(data)
+    
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def check_budget(request):
+    """
+    Verifica se um novo gasto excede o orçamento para uma determinada categoria.
+    """
+    category_id = request.data.get('category')
+    amount = float(request.data.get('amount', 0))
+    
+    if not category_id:
+        return JsonResponse({'error': 'Category not provided'}, status=400)
+
+    today = datetime.date.today()
+    try:
+        # Encontra o orçamento para a categoria e o mês/ano atuais
+        budget = Budget.objects.get(
+            user=request.user,
+            category_id=category_id,
+            month=today.month,
+            year=today.year
+        )
+        
+        # Soma as despesas existentes na categoria no mês atual
+        expenses = Transaction.objects.filter(
+            user=request.user,
+            category_id=category_id,
+            type='expense',
+            date__month=today.month,
+            date__year=today.year
+        ).aggregate(total_expenses=Sum('amount'))
+        
+        total_expenses = expenses['total_expenses'] or 0
+        
+        # Verifica se o novo gasto mais os gastos existentes excedem o orçamento
+        if total_expenses + amount > budget.amount:
+            return JsonResponse({
+                'exceeded': True,
+                'message': f'A adição de R${amount:.2f} excederá o orçamento de R${budget.amount:.2f} para esta categoria.'
+            })
+        else:
+            return JsonResponse({'exceeded': False})
+            
+    except Budget.DoesNotExist:
+        # Se não houver orçamento definido para a categoria, não há como exceder.
+        return JsonResponse({'exceeded': False, 'message': 'Nenhum orçamento definido para esta categoria.'})
