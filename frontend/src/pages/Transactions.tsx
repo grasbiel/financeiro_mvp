@@ -59,17 +59,15 @@ export default function Transactions() {
     const [totalCount, setTotalCount] = useState(0);
 
     const fetchCats = () => {
-        api.get<Category[]>('/categories/').then(res => {
+        api.get('/categories/').then(res => {
             // --- DEPURAÇÃO ---
-            console.log("Resposta da API de categorias:", res.data);
-            if (Array.isArray(res.data)) {
-                setCats(res.data);
-            } else {
-                console.error("ERRO: A resposta de /categories/ não é um array!", res.data);
-                setCats([]); // Define como array vazio para evitar o crash
+            if (res.data && Array.isArray(res.data.results)){
+                setCats(res.data.results)
+            } else if (Array.isArray(res.data)){
+                setCats(res.data)
             }
         }).catch(error => {
-            console.error("Erro na chamada da API /categories/:", error);
+            console.error("Erro ao Buscar categorias em Transactions:", error);
             setCats([]); // Garante que cats seja um array em caso de erro
         });
     };
@@ -86,9 +84,6 @@ export default function Transactions() {
         if (emotionFilter) params.emotion = emotionFilter;
         
         api.get('/transactions/', {params}).then(res => {
-            console.log("Resposta completa da API:", res);
-            console.log("Dados da resposta (res.data):", res.data);
-            console.log("Resultados dentro dos dados (res.data.results):", res.data.results);
             if (Array.isArray(res.data.results)) {
                 setRows(res.data.results);
                 setTotalCount(res.data.count)
