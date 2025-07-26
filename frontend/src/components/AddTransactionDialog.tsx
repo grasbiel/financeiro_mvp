@@ -51,7 +51,16 @@ export default function AddTransactionDialog({open, onClose, onCreated}: Props) 
 
     useEffect(() => {
         if (open) {
-            api.get<Category[]>('categories/').then(res => setCats(res.data))
+            api.get('categories/').then(res => {
+                if (res.data && Array.isArray(res.data.results)) {
+                    setCats(res.data.results)
+                } else if (Array.isArray(res.data)){
+                    setCats(res.data)
+                }
+            }).catch(error => {
+                console.error("Erro ao buscar categorias no diálogo:", error)
+                setCats([])
+            })
         }
     }, [open])
 
