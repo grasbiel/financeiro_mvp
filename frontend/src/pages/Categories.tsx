@@ -26,11 +26,24 @@ export default function Categories () {
 
     const fetchCategories = async () => {
         try{
-            const response = await api.get<Category[]>('/categories/');
-            setCats(response.data);
+            const response = await api.get('/categories/')
+
+            if (response.data && Array.isArray(response.data.results)) {
+                setCats(response.data.results)
+            } else if (Array.isArray(response.data)){   
+                setCats(response.data)
+            }
+            else {
+                console.error("Resposta inesperada da API de categoria:", response.data)
+                setCats(
+                    []
+                )
+            }
+            
         } catch (err) {
             setError("Não foi possível carregar as categorias. Tente novamente")
             console.error("Erro ao buscar as categorias: ", err)
+            setCats([])
         } finally {
             setLoading(false)
         }
