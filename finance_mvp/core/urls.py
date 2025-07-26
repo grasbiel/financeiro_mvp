@@ -31,7 +31,7 @@ urlpatterns = [
 
     path('monthly-summary/', MonthlySummaryView.as_view(), name='monthly-summary'),
     path('check-budget/', check_budget, name='check-budget'),
-    path('reports/expenses-by-category', ExpensesByCategoryView.as_view(), name="expenses-by-category"),
+    path('reports/expenses-by-category/', ExpensesByCategoryView.as_view(), name="expenses-by-category"),
     path('reports/incomes-by-category/', IncomesByCategoryView.as_view(), name='incomes-by-category'),
     path('reports/emotional-spending/', EmotionalSpendingView.as_view(), name='emotional-spending'),
     path('reports/needs-vs-wants/', NeedsVsWantsView.as_view(), name='needs-vs-wants'),
