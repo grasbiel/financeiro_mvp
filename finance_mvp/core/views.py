@@ -214,7 +214,7 @@ class CreateUserView(generics.CreateAPIView):
     permission_classes= [permissions.AllowAny]
 
 class CategoryViewSet(viewsets.ModelViewSet):
-    serializer_class = UserSerializer
+    serializer_class = CategorySerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):

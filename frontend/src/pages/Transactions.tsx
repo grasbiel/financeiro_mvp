@@ -74,8 +74,15 @@ export default function Transactions() {
         if (emotionFilter) params.emotion = emotionFilter;
         
         api.get('/transactions/', {params}).then(res => {
-            setRows(res.data.results);
-            setTotalCount(res.data.count)
+            if (Array.isArray(res.data.results)) {
+                setRows(res.data.results);
+                setTotalCount(res.data.count)
+            } else {
+                console.error("A resposta da API não contém um Array de resultados")
+            }
+            
+        }).catch(error => {
+            console.error("Erro ao buscar transações:", error)
         });
     };
 
@@ -141,7 +148,7 @@ export default function Transactions() {
                         <MenuItem key={c.id} value={c.id}>
                             {c.name}
                         </MenuItem>
-                    ))};
+                    ))}
                 </TextField>
 
                 <TextField
