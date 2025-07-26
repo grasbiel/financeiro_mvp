@@ -61,7 +61,9 @@ class Transaction (models.Model):
     emotional_trigger = models.CharField(
         max_length=30,
         choices= EMOTIONAL_TRIGGER_CHOICES,
-        default= "Necessidade Básica"
+        default= "Necessidade Básica",
+        null= True,
+        blank= True
     )
     
     # Campo opcional de categoria

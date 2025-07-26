@@ -1,6 +1,7 @@
 import {
     Dialog, DialogTitle, DialogContent, DialogActions,
     Button, TextField, MenuItem, Stack,
+    ToggleButtonGroup, ToggleButton
 } from '@mui/material'
 
 import {useForm, Controller} from 'react-hook-form'
@@ -23,7 +24,7 @@ interface FormData{
     date: string;
     description?: string;
     category?: number | null;
-    emotional_trigger: string;
+    emotional_trigger?: string;
 }
 
 const EMOTIONAL_TRIGGERS = [
@@ -48,9 +49,21 @@ export default function AddTransactionDialog({open, onClose, onCreated}: Props) 
     });
 
     const [cats, setCats] = useState<Category[]>([])
+    const [transactionType, setTransactionType]= useState<'expense' | 'income'>('expense');
 
     useEffect(() => {
         if (open) {
+            reset({
+                value: 0,
+                date: '',
+                description:'',
+                category: null,
+                emotional_trigger: 'Necessidade Básica'
+            });
+
+            setTransactionType('expense')
+
+            // busca as categorias
             api.get('categories/').then(res => {
                 if (res.data && Array.isArray(res.data.results)) {
                     setCats(res.data.results)
@@ -62,22 +75,28 @@ export default function AddTransactionDialog({open, onClose, onCreated}: Props) 
                 setCats([])
             })
         }
-    }, [open])
+    }, [open,reset])
+    
+    const handleTypeChange = (event: React.MouseEvent<HTMLElement>, newType:'income' | 'expense' | null) => {
+        if (newType !== null) {
+            setTransactionType(newType)
+        }
+    }
 
     const onSubmit = async (data: FormData) => {
+        const finalValue = transactionType === 'expense' ? -Math.abs(data.value) : Math.abs(data.value)
         const payload = {
-            value: data.value,
+            value: finalValue,
             date: data.date,
             description: data.description || null,
             category: data.category ?? null,
-            emotional_trigger: data.emotional_trigger,
+            emotional_trigger: transactionType === 'expense' ? data.emotional_trigger : null,
         };
 
         try {
             await api.post('transactions/', payload);
-            reset();
-            onCreated();
-            onClose();
+            onCreated()
+            onClose()
         } catch (error: any) {
             console.error("Erro ao criar transação: ", error)
 
@@ -95,17 +114,36 @@ export default function AddTransactionDialog({open, onClose, onCreated}: Props) 
 
             <form onSubmit={handleSubmit(onSubmit)}>
                 <DialogContent>
-                    <Stack spacing={2}>
+                    <Stack spacing={2} sx={{mt: 1}}>
+
+                        {/* Seletor de tipo */}
+                        <ToggleButtonGroup
+                            value={transactionType}
+                            exclusive
+                            onChange={handleTypeChange}
+                            aria-label='tipo de transação'
+                            fullWidth
+                        >
+                            <ToggleButton value="expense" aria-label='despesa' color='error'>
+                                Despesa
+                            </ToggleButton>
+
+                            <ToggleButton value="income" aria-label="receita" color="success">
+                                Receita
+                            </ToggleButton>
+                            
+                        </ToggleButtonGroup>
 
                         <Controller
                             name="value"
                             control = {control}
-                            rules={{required: true}}
+                            rules={{required: "Valor é obrigatório", min:{value: 0.01, message: "O valor deve ser maior que zero"}}}
                             render={({field, fieldState}) => (
                                 <TextField 
                                     {...field} 
                                     label= "Valor (R$)" 
                                     type= "number"
+                                    onChange={(e) => field.onChange(Math.abs(parseFloat(e.target.value)))}
                                     error= {!!fieldState.error}
                                     helperText = {fieldState.error?.message}    
                                     />
@@ -158,31 +196,33 @@ export default function AddTransactionDialog({open, onClose, onCreated}: Props) 
                                         field.onChange(v === '' ? null : Number(v));
                                     }}
                                 >
-                                    <MenuItem value="">--</MenuItem>
+                                    <MenuItem value="">-- Nenhuma --</MenuItem>
                                     {cats.map(c => (
                                         <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
                                     ))}
                                 </TextField>
                             )}
                         />
-
-                        <Controller
+                        {transactionType === 'expense' &&(
+                            <Controller
                             name='emotional_trigger'
                             control={control}
-                            rules={{required: true}}
+                            rules={{required: transactionType === 'expense'}}
                             render={({field}) => (
-                                <TextField
-                                    {...field}
-                                    select
-                                    label="Gatilho Emocional"
-                                    fullWidth
-                                >
-                                    {EMOTIONAL_TRIGGERS.map(tr => (
-                                        <MenuItem key={tr} value={tr}>{tr}</MenuItem>
-                                    ))}
-                                </TextField>
-                            )}
-                        />
+                                    <TextField
+                                        {...field}
+                                        select
+                                        label="Gatilho Emocional"
+                                        fullWidth
+                                    >
+                                        {EMOTIONAL_TRIGGERS.map(tr => (
+                                            <MenuItem key={tr} value={tr}>{tr}</MenuItem>
+                                        ))}
+                                    </TextField>
+                                )}
+                             />
+                        )}
+                        
                     </Stack>
                 </DialogContent>
 
