@@ -16,7 +16,7 @@ export default function EmotionReport() {
     const [data, setData] = useState<EmotionData[]>([]);
 
     useEffect(() => {
-        api.get<EmotionData[]>('/reports/expenses_by_emotion/')
+        api.get<EmotionData[]>('/reports/expenses-by-emotion/')
             .then(res => setData(res.data))
             .catch(err => console.error(err))
     }, []);
