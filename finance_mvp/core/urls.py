@@ -23,13 +23,16 @@ router.register(r'users', UserViewSet, basename='user')
 urlpatterns = [
     path('', include(router.urls)),
     
+    # Rotas de autenticação
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('token/blacklist/', TokenBlacklistView.as_view(),name='token_blacklist'),
+
+
+    path('monthly-summary/', MonthlySummaryView.as_view(), name='monthly-summary'),
     path('check-budget/', check_budget, name='check-budget'),
     path('reports/expenses-by-category', ExpensesByCategoryView.as_view(), name="expenses-by-category"),
     path('reports/incomes-by-category/', IncomesByCategoryView.as_view(), name='incomes-by-category'),
-    path('reports/monthly-summary/', MonthlySummaryView.as_view(), name='monthly-summary'),
     path('reports/emotional-spending/', EmotionalSpendingView.as_view(), name='emotional-spending'),
     path('reports/needs-vs-wants/', NeedsVsWantsView.as_view(), name='needs-vs-wants'),
 ]   
