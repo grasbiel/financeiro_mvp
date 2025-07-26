@@ -77,7 +77,7 @@ export default function AddTransactionDialog({open, onClose, onCreated}: Props) 
         }
     }, [open,reset])
     
-    const handleTypeChange = (event: React.MouseEvent<HTMLElement>, newType:'income' | 'expense' | null) => {
+    const handleTypeChange = (_event: React.MouseEvent<HTMLElement>, newType:'income' | 'expense' | null) => {
         if (newType !== null) {
             setTransactionType(newType)
         }
