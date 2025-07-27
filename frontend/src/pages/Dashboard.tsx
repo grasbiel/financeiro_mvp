@@ -84,8 +84,8 @@ export default function DashBoard() {
             try{
                 const [summaryRes, categoryRes, emotionRes, monthlyFlowRes] = await Promise.all([
                     api.get<SummaryData>('/monthly-summary/'),
-                    api.get<CategoryData[]>('/reports/category-spending/'),
-                    api.get<EmotionData[]>('/reports/emotional-spending/'),
+                    api.get<CategoryData[]>('reports/expenses-by-category/'),
+                    api.get<EmotionData[]>('/reports/expenses-by-emotion/'),
                     api.get<MonthlyFlowData[]>('/reports/monthly-flow/')
 
                 ]);
