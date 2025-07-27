@@ -11,7 +11,7 @@ from .views import (
     TransactionViewSet,
     BudgetViewSet,
     UserViewSet,
-    EmotionalSpendingView,
+    MonthlyFlowView,
     NeedsVsWantsView,
     check_budget
 )
@@ -36,4 +36,5 @@ urlpatterns = [
     path('reports/incomes-by-category/', IncomesByCategoryView.as_view(), name='incomes-by-category'),
     path('reports/expenses-by-emotion/', ExpensesByEmotionalTriggerView.as_view(), name='emotional-spending'),
     path('reports/needs-vs-wants/', NeedsVsWantsView.as_view(), name='needs-vs-wants'),
+    path('reports/monthly-flow/', MonthlyFlowView.as_view(), name='monthly-flow'),
 ]   
