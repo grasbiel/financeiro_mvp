@@ -1,4 +1,4 @@
-from django.db.models import Sum, Q, DecimalField
+from django.db.models import Sum, Value, Case, When, F, DecimalField
 from django.db.models.functions import Coalesce
 from django.shortcuts import render
 
@@ -11,9 +11,9 @@ from rest_framework.decorators import api_view, permission_classes
 from django.http import JsonResponse
 from rest_framework.response import Response
 from django.utils import timezone
-from django.db.models import Sum, Q
 from .models import Transaction, Category, Budget
 import datetime
+import calendar
 from .serializers import (
     TransactionSerializer,
     UserSerializer,
@@ -444,6 +444,38 @@ class ExpensesByEmotionalTriggerView(APIView):
 
         return Response(results)
 
+class MonthlyFlowView (APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        user= request.user
+        today = timezone.now().date()
+
+        first_day_of_month = today.replace(day=1)
+        last_day_of_month = today.replace(day=calendar.monthrange(today.year,today.month)[1])
+
+        all_days_of_month = [first_day_of_month + timezone.timedelta(days=i) for i in range((last_day_of_month - first_day_of_month).days+1)]
+
+        transaction_by_day = Transaction.objects.filter(
+            user= user,
+            date__gte = first_day_of_month,
+            date__lte= last_day_of_month
+        ).values('date').annotate(
+            income= Coalesce(Sum(Case(When(value__gt=0, then='value'))), Value(0)),
+            expense= Coalesce(Sum(Case(When(value__lt=0, then='value'))), Value(0))
+        ).order_by('date')
+
+        transactions_dict = {t['date']: {'income': t['income'], 'expense': abs(t['expense'])} for t in transaction_by_day}
+        result=[]
+
+        for day in all_days_of_month:
+            data = transactions_dict.get(day, {'income': 0, 'expense': 0})
+            result.append({
+                'day': day.strftime('%d/%m'),
+                'receita': float(data['income']),
+                'despesa': float(data['expense'])
+
+            })
 
 class TransactionFilter(filters.FilterSet):
     start= filters.DateFilter(field_name="date", lookup_expr='gte')
