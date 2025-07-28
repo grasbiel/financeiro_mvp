@@ -27,6 +27,6 @@ def check_budget(sender, instance, **kwargs):
     except Budget.DoesNotExist:
         return
     
-    limite = -float(budget.amount_limit) # budget armazenado como positivo
+    limite = -float(budget.value) # budget armazenado como positivo
     
     
