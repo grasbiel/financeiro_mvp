@@ -5,7 +5,7 @@ from .views import (
     CategoryViewSet,
     MonthlySummaryView,    
     ExpensesByCategoryView,
-    ExpensesByEmotionalTriggerView,
+    EmotionalSpendingView,
     IncomesByCategoryView,
     MonthlySummaryView,
     TransactionViewSet,
@@ -34,7 +34,7 @@ urlpatterns = [
     path('check-budget/', check_budget, name='check-budget'),
     path('reports/expenses-by-category/', ExpensesByCategoryView.as_view(), name="expenses-by-category"),
     path('reports/incomes-by-category/', IncomesByCategoryView.as_view(), name='incomes-by-category'),
-    path('reports/expenses-by-emotion/', ExpensesByEmotionalTriggerView.as_view(), name='emotional-spending'),
+    path('reports/expenses-by-emotion/', EmotionalSpendingView.as_view(), name='emotional-spending'),
     path('reports/needs-vs-wants/', NeedsVsWantsView.as_view(), name='needs-vs-wants'),
     path('reports/monthly-flow/', MonthlyFlowView.as_view(), name='monthly-flow'),
 ]   

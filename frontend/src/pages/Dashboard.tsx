@@ -86,8 +86,7 @@ export default function DashBoard() {
                     api.get<SummaryData>('/monthly-summary/'),
                     api.get<CategoryData[]>('reports/expenses-by-category/'),
                     api.get<EmotionData[]>('/reports/expenses-by-emotion/'),
-                    api.get<MonthlyFlowData[]>('/reports/monthly-flow/')
-
+                    api.get<MonthlyFlowData[]>('/reports/monthly-flow/'),
                 ]);
 
                 setSummary(summaryRes.data)
