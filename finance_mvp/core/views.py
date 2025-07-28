@@ -484,12 +484,21 @@ class EmotionalSpendingView(APIView):
         # Agrupa as transações por 'emotional_trigger' e soma os valores
         data = (
             Transaction.objects
-            .filter(user=request.user, type='expense')
+            .filter(user=request.user, value__lt=0)  # CORRIGIDO: Filtra por valor negativo
             .values('emotional_trigger')
-            .annotate(total=Sum('amount'))
-            .order_by('-total')
+            .annotate(total_spent=Sum('value'))  # CORRIGIDO: Soma o campo 'value'
+            .order_by('-total_spent')
         )
-        return Response(data)
+        
+        # Opcional, mas recomendado: retornar o valor como positivo para o frontend
+        results = [
+            {
+                'emotional_trigger': item['emotional_trigger'],
+                'total_spent': abs(item['total_spent'])
+            }
+            for item in data
+        ]
+        return Response(results)
     
 class NeedsVsWantsView(APIView):
     """
