@@ -447,23 +447,25 @@ class ExpensesByEmotionalTriggerView(APIView):
 class MonthlyFlowView (APIView):
     permission_classes = [permissions.IsAuthenticated]
     def get(self, request, *args, **kwargs):
-        user = request.user
-        today = timezone.now().date()
-        first_day_of_month = today.replace(day=1)
-        last_day_of_month = today.replace(day=calendar.monthrange(today.year, today.month)[1])
-        all_days_of_month = [first_day_of_month + timezone.timedelta(days=i) for i in range((last_day_of_month - first_day_of_month).days + 1)]
-        transactions_by_day = Transaction.objects.filter(
-            user=user, date__gte=first_day_of_month, date__lte=last_day_of_month
-        ).values('date').annotate(
-            income=Coalesce(Sum(Case(When(value__gt=0, then='value'))), Value(0)),
-            expense=Coalesce(Sum(Case(When(value__lt=0, then='value'))), Value(0))
-        ).order_by('date')
-        transactions_dict = {t['date']: {'income': t['income'], 'expense': abs(t['expense'])} for t in transactions_by_day}
-        result = []
-        for day in all_days_of_month:
-            data = transactions_dict.get(day, {'income': 0, 'expense': 0})
-            result.append({'day': day.strftime('%d/%m'), 'receita': float(data['income']), 'despesa': float(data['expense'])})
-        return Response(result)
+        # Calcula a soma das receitas (valores positivos)
+        total_revenue = (
+            Transaction.objects
+            .filter(user=request.user, value__gt=0)  # CORRIGIDO
+            .aggregate(total=Sum('value'))['total'] or 0 # CORRIGIDO
+        )
+
+        # Calcula a soma das despesas (valores negativos)
+        total_expenses = (
+            Transaction.objects
+            .filter(user=request.user, value__lt=0)  # CORRIGIDO
+            .aggregate(total=Sum('value'))['total'] or 0 # CORRIGIDO
+        )
+
+        # Retorna os totais
+        return Response({
+            'total_revenue': total_revenue,
+            'total_expenses': abs(total_expenses)
+        })
 class TransactionFilter(filters.FilterSet):
     start= filters.DateFilter(field_name="date", lookup_expr='gte')
     end = filters.DateFilter(field_name="date", lookup_expr="lte")
