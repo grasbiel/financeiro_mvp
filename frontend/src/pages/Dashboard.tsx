@@ -18,8 +18,8 @@ interface SummaryData {
 }
 
 interface CategoryData {
-    category__name: string
-    total_spent: number
+    category: string
+    total_expenses: number
 }
 
 interface EmotionData {
@@ -29,7 +29,7 @@ interface EmotionData {
 
 interface MonthlyFlowData {
     day: string
-    receita: string
+    receita: number
     despesa: number
 }
 
@@ -97,7 +97,7 @@ export default function DashBoard() {
                     .sort((a,b) => b[valueKey] - a[valueKey])
                     .slice(0,5)
 
-                setCategoryData(processAndSort(categoryRes.data,'total_spent'));
+                setCategoryData(processAndSort(categoryRes.data,'total_expenses'));
                 setEmotionData(processAndSort(emotionRes.data, 'total_spent'));
             } catch (error) {
                 setError("Não foi possível carregar os dados do dashboard.")
@@ -154,9 +154,9 @@ export default function DashBoard() {
                         <BarChart data={categoryData} layout='vertical' margin={{top:5, right:30, left:30, bottom:5 }}>
                             <CartesianGrid strokeDasharray="3 3"/>
                             <XAxis type='number' tickFormatter={formatCurrencyTick} />
-                            <YAxis type='category' dataKey="category__name" width={120} />
+                            <YAxis type='category' dataKey="category" width={120} />
                             <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                            <Bar dataKey="total_spent" fill="#1976d2" name="Total Gasto" />
+                            <Bar dataKey="total_expenses" fill="#1976d2" name="Total Gasto" />
                         </BarChart>
                     </ChartContainer>
                 </Grid>
