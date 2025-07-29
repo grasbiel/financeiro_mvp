@@ -222,9 +222,23 @@ class BudgetViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+class TransactionFilter(filters.FilterSet):
+    start= filters.DateFilter(field_name="date", lookup_expr='gte')
+    end = filters.DateFilter(field_name="date", lookup_expr="lte")
+    category = filters.NumberFilter(field_name='category__id')
+    emotion = filters.CharFilter(field_name="emotional_trigger", lookup_expr="iexact")
+
+    class Meta:
+        model = Transaction
+        fields= ['start', 'end', 'category', 'emotion']
+
 class TransactionViewSet(viewsets.ModelViewSet):
     serializer_class = TransactionSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    filter_backends = [filters.DjangoFilterBackend]
+    filterset_class = TransactionFilter
 
     def get_queryset(self):
         return Transaction.objects.filter(user=self.request.user).order_by('-date')
@@ -446,16 +460,6 @@ class MonthlyFlowView (APIView):
             'total_revenue': total_revenue,
             'total_expenses': abs(total_expenses)
         })
-class TransactionFilter(filters.FilterSet):
-    start= filters.DateFilter(field_name="date", lookup_expr='gte')
-    end = filters.DateFilter(field_name="date", lookup_expr="lte")
-    category = filters.NumberFilter(field_name='category__id')
-    emotion = filters.CharFilter(field_name="emotional_trigger", lookup_expr="iexact")
-
-    class Meta:
-        model = Transaction
-        fields= ['start', 'end', 'category', 'emotion']
-
 class EmotionalSpendingView(APIView):
     """
     View para calcular o total de gastos por gatilho emocional.
