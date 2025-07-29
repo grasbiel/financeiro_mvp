@@ -100,14 +100,30 @@ export default function Transactions() {
         fetchCats();
     }, []);
 
+     useEffect(() => {
+        fetchCats();
+    }, []);
+
+       
     useEffect(() => {
-        fetchData();
-    }, [page, rowsPerPage]);
+    
+        const handler = setTimeout(() => {
+            setPage(0); 
+            fetchData();
+        }, 500); 
+
+        return () => {
+            clearTimeout(handler);
+        };
+    }, [start, end, categoryFilter, emotionFilter, rowsPerPage]);
+
+    useEffect(() => {
+        fetchData()
+    }, [page]);
 
 
     const handleFilterSubmit = () => {
         setPage(0);
-        fetchData();
     };
 
     return (
