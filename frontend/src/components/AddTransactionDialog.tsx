@@ -98,12 +98,20 @@ export default function AddTransactionDialog({open, onClose, onCreated}: Props) 
             onCreated()
             onClose()
         } catch (error: any) {
-            console.error("Erro ao criar transação: ", error)
+            console.error("DEBUG: Objeto de erro completo:", error);
+            console.error("DEBUG: Resposta do servidor (se houver):", error.response); 
 
+            // 2. Log de erro original
+            console.error("Erro ao criar transação: ", error);
+
+            // 3. Tenta extrair a mensagem de erro específica da resposta da API
             const errorMessage = error.response?.data?.detail ||
                                 error.response?.data?.category ||
-                                "Ocorreu um erro ao salvar. Verifique os dados ou o orçamento "
-            alert(errorMessage)
+                                // Se não encontrar uma mensagem específica, usa a mensagem genérica
+                                "Ocorreu um erro ao salvar. Verifique os dados ou o orçamento ";
+            
+            // 4. Exibe o alerta para o usuário
+            alert(errorMessage);
         }
         
     }
