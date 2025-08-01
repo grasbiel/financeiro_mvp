@@ -89,56 +89,48 @@ class TransactionListCreateView(generics.ListCreateAPIView):
             self.check_budget(trans_date, category, abs(transaction_value))
 
         serializer.save(user=self.request.user)
-    
+
     def check_budget(self, trans_date, category, expense_value):
-        user = self.request.user
         month = trans_date.month
         year = trans_date.year
 
+        budget = Budget.objects.filter(
+            user=self.request.user, category=category, month=month, year=year
+        ).first()
 
-        budget_q = Q(user=user, month=month, year=year)
-        if category:
-            # Prioriza orçamento da categoria, se houver
-            budget_q &= Q(category=category)
-        else:
-            # Se a transação não tem categoria, procura um orçamento geral
-            budget_q &= Q(category__isnull=True)
-        
-        # Se não achar orçamento específico, busca o geral como fallback
-        budget = Budget.objects.filter(budget_q).first()
-        if not budget and category:
+        # Se não houver orçamento específico, busca por um orçamento geral (sem categoria)
+        if not budget:
             budget = Budget.objects.filter(
-                user=user, month=month, year=year, category__isnull=True
+                user=self.request.user, category__isnull=True, month=month, year=year
             ).first()
 
-        # Se nenhum orçamento foi encontrado, não há nada a fazer.
-        if not budget:
-            return
+        # Se um orçamento (específico ou geral) foi encontrado, faz a verificação
+        if budget:
+            query_filter = {
+                "user": self.request.user, 
+                "date__month": month, 
+                "date__year": year, 
+                "value__lt": 0
+            }
+            if budget.category:
+                query_filter["category"] = budget.category
+            else:
+                # Se o orçamento é geral, consideramos despesas sem categoria
+                query_filter["category__isnull"] = True
 
-        # 2. Calcular os gastos na categoria do orçamento encontrado
-        spent_q = Q(user=user, date__month=month, date__year=year, value__lt=0)
-        if budget.category:
-            spent_q &= Q(category=budget.category)
-        else:
-            # Se o orçamento é geral, soma TODAS as despesas do mês
-            # NOTA: Você pode querer refinar essa lógica. Somar todas as despesas
-            # para um orçamento "Geral" pode não ser o desejado se houver
-            # outros orçamentos por categoria. A lógica aqui assume que
-            # o orçamento "Geral" cobre despesas sem categoria.
-            spent_q &= Q(category__isnull=True)
+            total_spent_result = Transaction.objects.filter(**query_filter).aggregate(total=Sum("value"))
+            total_spent = abs(total_spent_result["total"]) if total_spent_result["total"] else 0
 
-        total_spent_agg = Transaction.objects.filter(spent_q).aggregate(total=Sum('value'))
-        total_spent = abs(total_spent_agg['total']) if total_spent_agg['total'] else 0
-
-        # 3. Validar
-        if (total_spent + expense_value) > budget.value:
-            category_name = budget.category.name if budget.category else "Geral"
-            raise serializers.ValidationError(
-                f"Esta transação excede o orçamento de R$ {budget.value:.2f} "
-                f"para a categoria '{category_name}'. "
-                f"Gasto atual: R$ {total_spent:.2f}"
-            )
-
+            # Verifica se o novo gasto excede o limite do orçamento
+            if (total_spent + expense_value) > budget.value:
+                category_name = budget.category.name if budget.category else "Geral"
+                
+                raise serializers.ValidationError(
+                    f"Esta transação excede o orçamento de R$ {budget.value:.2f} "
+                    f"para a categoria '{category_name}'. "
+                    f"Gasto atual: R$ {total_spent:.2f}"
+                )
+    
         
 # 3) Detalhe/Atualizar/Deletar transação
 class TransactionRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
