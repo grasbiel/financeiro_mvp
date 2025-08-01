@@ -18,18 +18,12 @@ class Budget(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     category = models.ForeignKey('Category', on_delete=models.SET_NULL, null= True, blank= True)
     value = models.DecimalField(max_digits=10, decimal_places=2)
-    start_date = models.DateField()
-    end_date = models.DateField()
+    month = models.IntegerField()
+    year = models.IntegerField()
 
     
     class Meta:
-        constraints = [
-            UniqueConstraint(
-                fields=['user', 'category'],
-                condition = Q(start_date__month = models.F('end_date__month')),
-                name= 'unique_mothly_budget_for_category'
-            )
-        ]
+        unique_together = ('user', 'category','month','year') 
 
     def __str__(self):
         cat_name = self.category.name if self.category else "Geral"
