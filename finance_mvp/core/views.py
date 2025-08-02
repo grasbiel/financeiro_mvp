@@ -166,54 +166,55 @@ class TransactionFilter(filters.FilterSet):
         fields= ['start', 'end', 'category', 'emotion']
 
 class TransactionViewSet(viewsets.ModelViewSet):
-    queryset = Transaction.objects.all()
     serializer_class = TransactionSerializer
+    permission_classes= [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
     filterset_class = TransactionFilter
 
     def get_queryset(self):
-        start_date = self.request.query_params.get('start_date')
-        end_date = self.request.query_params.get('end_date')
-
-        if start_date and end_date:
-            return self.queryset.filter(date__range=[start_date, end_date])
-        return self.queryset.all()
+        return Transaction.objects.filter(user=self.request.user).order_by('-date')
     
-    def check_budget(self, transaction):
-        """Verifica se a transação excede o orçamento."""
-        # A lógica de check_budget que analisamos antes...
-        expense_value = abs(transaction.value)
-        month = transaction.date.month
-        year = transaction.date.year
+    def check_budget(self, transaction_instance):
+        expense_value = abs(transaction_instance.value)
+        trans_date = transaction_instance.date
+        category = transaction_instance.category
+        month = trans_date.month
+        year = trans_date.year
 
-        # 1. Tenta encontrar orçamento para a categoria específica
+        # 1. Tenta encontrar um orçamento para a categoria específica
         budget = Budget.objects.filter(
-            category=transaction.category,
-            month=month,
-            year=year
+            user=self.request.user, category=category, month=month, year=year
         ).first()
 
-        # 2. Se não houver, tenta encontrar um orçamento geral
+        # 2. Se não houver, busca por um orçamento geral (sem categoria)
         if not budget:
             budget = Budget.objects.filter(
-                category__isnull=True,
-                month=month,
-                year=year
+                user=self.request.user, category__isnull=True, month=month, year=year
             ).first()
 
-        # 3. Se um orçamento for encontrado, verifica os gastos
+        # 3. Se um orçamento for encontrado, faz a verificação
         if budget:
-            total_spent = Transaction.objects.filter(
-                date__month=month,
-                date__year=year,
-                value__lt=0,
-                category=budget.category
-            ).aggregate(total=Sum('value'))['total'] or 0
-            total_spent = abs(total_spent)
+            # Monta a base da consulta para somar os gastos
+            query_filter = {
+                "user": self.request.user,
+                "date__month": month,
+                "date__year": year,
+                "value__lt": 0
+            }
+            # Se o orçamento for específico para uma categoria, filtra por ela
+            if budget.category:
+                query_filter["category"] = budget.category
 
+            # Soma todos os gastos (excluindo a transação atual, caso seja uma atualização)
+            total_spent_result = Transaction.objects.filter(**query_filter).exclude(pk=transaction_instance.pk).aggregate(total=Sum("value"))
+            total_spent = abs(total_spent_result["total"]) if total_spent_result["total"] else 0
+
+            # Verifica se o novo gasto excede o limite do orçamento
             if (total_spent + expense_value) > budget.value:
-                # CORREÇÃO DO ERRO ORIGINAL APLICADA AQUI
-                category_name = budget.category.name if budget.category else "Geral"
+                
+                # ===== A CORREÇÃO PRINCIPAL ESTÁ AQUI =====
+                # Verifica se budget.category existe ANTES de tentar acessar .name
+                category_name = budget.category.name if budget.category is not None else "Geral"
                 
                 raise serializers.ValidationError(
                     f"Esta transação excede o orçamento de R$ {budget.value:.2f} "
