@@ -31,7 +31,6 @@ export default function Navbar() {
                         <Button color='inherit' component={Link} to='/'>Dashboard</Button>
                         <Button color='inherit' component={Link} to='/transactions'>Transações</Button>
                         <Button color='inherit' component={Link} to='/categories'>Categorias</Button>
-                        <Button color='inherit' component={Link} to='/budgets'>Orçamentos</Button>
                         <Button color='inherit' component={Link} to='/reports'>Relatórios</Button>
                         <Button color='inherit' component={Link} to='/emotion-report'>Emoções</Button>
                         <Button color='inherit' onClick={logout} sx={{marginLeft:'auto'}}>Sair</Button>

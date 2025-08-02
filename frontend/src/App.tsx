@@ -24,7 +24,6 @@ export default function App() {
           <Route path='/' element={<DashBoard />} />
           <Route path='/transactions' element={<Transactions />} />
           <Route path='/categories' element={<Categories />} />
-          <Route path ='/budgets' element={<Budgets />} />
           <Route path ='/reports' element={<Reports />} />
           <Route path ='/emotion-report' element= {<EmotionReport/>} /> 
         </Route>

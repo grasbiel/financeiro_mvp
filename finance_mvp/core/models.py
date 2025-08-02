@@ -14,29 +14,6 @@ class Category(models.Model):
     def __str__(self):
         return f"{self.name} ({self.user.username})"
     
-class Budget(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    category = models.ForeignKey('Category', on_delete=models.SET_NULL, null=True, blank=True)
-    value = models.DecimalField(max_digits=10, decimal_places=2)
-    
-
-    month = models.IntegerField()
-    year = models.IntegerField()
-
-    class Meta:
-        unique_together = ('user', 'category', 'month', 'year')
-
-    def __str__(self):
-        cat_name = self.category.name if self.category else "Geral"
-
-        return f"Orçamento de {cat_name} ({self.month}/{self.year}) - {self.user.username}"
-    
-    def current_month():
-        return datetime.now().month
-    
-    def current_year():
-        return datetime.now().year
-
 class Transaction (models.Model):
     EMOTIONAL_TRIGGER_CHOICES= [
         ("Necessidade Básica", "Necessidade Básica"),

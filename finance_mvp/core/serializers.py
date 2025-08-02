@@ -1,29 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Transaction, Category, Budget
+from .models import Transaction, Category
 
-class BudgetSerializer (serializers.ModelSerializer):
-    month = serializers.IntegerField(required=True)
-    year = serializers.IntegerField(required=True)
-    amount_limit = serializers.DecimalField(required=True, max_digits=10, decimal_places=2)
-
-    class Meta:
-        model = Budget
-        fields = ['id', 'category', 'amount_limit','month', 'year']
-
-    def validate(self, data):
-        month = data['month']
-        year = data['year']
-
-        #Validação simples de mês/ano
-        if month < 1 or month > 12:
-            raise serializers.ValidationError("Mês inválido. Use valores entre 1 e 12.")
-        
-        if year < 2000 or year > 2100:
-            raise serializers.ValidationError("Ano inválido ou fora do intervalo permitido.")
-
-        return data
-        
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:

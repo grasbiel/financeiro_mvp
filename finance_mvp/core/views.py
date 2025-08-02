@@ -11,13 +11,12 @@ from rest_framework.decorators import api_view, permission_classes
 from django.http import JsonResponse
 from rest_framework.response import Response
 from django.utils import timezone
-from .models import Transaction, Category, Budget
+from .models import Transaction, Category
 import datetime
 from .serializers import (
     TransactionSerializer,
     UserSerializer,
     CategorySerializer,
-    BudgetSerializer
     )
 from django.contrib.auth.models import User
 from django_filters import rest_framework as filters
@@ -61,62 +60,6 @@ class SignupView (generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [permissions.AllowAny]
-class TransactionRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
-    serializer_class = TransactionSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    # Garante que o usuário só possa ver/modificar sua própria transação
-    def get_queryset(self):
-        return Transaction.objects.filter(user=self.request.user)
-        
-    def check_budget_on_update(self, trans_date, category, new_expense_value, instance):
-        budgets = Budget.objects.filter(
-            user = self.request.user,
-            category = category,
-            start_date__lte = trans_date,
-            end_date__gte = trans_date
-        )
-
-        if not budgets.exists():
-            return
-        
-        budget = budgets.first()
-
-        total_expenses = Transaction.objects.filter(
-            user = self.request.user,
-            category = category,
-            date__range = (budget.start_date, budget.end_date),
-            value__lt = 0
-        ).exclude(pk=instance.pk).aggregate(total=Sum('value'))['total'] or 0
-
-        total_spent_without_this = abs(total_expenses)
-
-        if (total_spent_without_this + new_expense_value) > budget.value:
-            raise serializers.ValidationError(
-                f"A atualização desta transação excede o orçamento de R$ {budget.value: .2f}"
-                f"para a categoria '{category.name}'"
-            )
-
-    # Atualização de transação, aplicando a verificação de orçamento
-    def perform_update(self, serializer):
-
-        # Pega a instância de transação que está sendo atualizada
-        instance = self.get_object()
-
-        new_value = serializer.validated_data.get('value', instance.value)
-
-        if new_value < 0:
-            new_date = serializer.validated_data.get('date', instance.date)
-            new_category = serializer.validated_data.get('category', instance.category)
-
-            # Valida se a categoria (se foi alterada) pertence ao usuário
-            if 'category' in serializer.validated_data and new_category.user != self.request.user:
-                raise serializers.ValidationError("Você só pode usar suas próprias categorias")
-            
-            expense_value = abs(new_value)
-            self.check_budget_on_update(new_date, new_category, expense_value, instance)
-        serializer.save()
-            
     
 # 4) Resumo Mensal
 from rest_framework.views import APIView
@@ -145,16 +88,6 @@ class TransactionViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
-class BudgetViewSet(viewsets.ModelViewSet):
-    serializer_class = BudgetSerializer
-    permission_classes= [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        return Budget.objects.filter(user=self.request.user)
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-
 class TransactionFilter(filters.FilterSet):
     start= filters.DateFilter(field_name="date", lookup_expr='gte')
     end = filters.DateFilter(field_name="date", lookup_expr="lte")
@@ -174,61 +107,11 @@ class TransactionViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Transaction.objects.filter(user=self.request.user).order_by('-date')
     
-    def check_budget(self, transaction_instance):
-        expense_value = abs(transaction_instance.value)
-        trans_date = transaction_instance.date
-        category = transaction_instance.category
-        month = trans_date.month
-        year = trans_date.year
-
-        # 1. Tenta encontrar um orçamento para a categoria específica
-        budget = Budget.objects.filter(
-            user=self.request.user, category=category, month=month, year=year
-        ).first()
-
-        # 2. Se não houver, busca por um orçamento geral (sem categoria)
-        if not budget:
-            budget = Budget.objects.filter(
-                user=self.request.user, category__isnull=True, month=month, year=year
-            ).first()
-
-        # 3. Se um orçamento for encontrado, faz a verificação
-        if budget:
-            # Monta a base da consulta para somar os gastos
-            query_filter = {
-                "user": self.request.user,
-                "date__month": month,
-                "date__year": year,
-                "value__lt": 0
-            }
-            # Se o orçamento for específico para uma categoria, filtra por ela
-            if budget.category:
-                query_filter["category"] = budget.category
-
-            # Soma todos os gastos (excluindo a transação atual, caso seja uma atualização)
-            total_spent_result = Transaction.objects.filter(**query_filter).exclude(pk=transaction_instance.pk).aggregate(total=Sum("value"))
-            total_spent = abs(total_spent_result["total"]) if total_spent_result["total"] else 0
-
-            # Verifica se o novo gasto excede o limite do orçamento
-            if (total_spent + expense_value) > budget.value:
-                
-                # ===== A CORREÇÃO PRINCIPAL ESTÁ AQUI =====
-                # Verifica se budget.category existe ANTES de tentar acessar .name
-                category_name = budget.category.name if budget.category is not None else "Geral"
-                
-                raise serializers.ValidationError(
-                    f"Esta transação excede o orçamento de R$ {budget.value:.2f} "
-                    f"para a categoria '{category_name}'. "
-                    f"Gasto atual: R$ {total_spent:.2f}"
-                )
-            
+   
     def perform_create(self, serializer):
         """Sobrescreve o método de criação para validar o orçamento."""
         transaction = serializer.save(user=self.request.user)
         
-        # Chama a verificação apenas para despesas (valor negativo)
-        if transaction.value < 0:
-            self.check_budget(transaction)
         
 class MonthlySummaryView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -267,65 +150,6 @@ class MonthlySummaryView(APIView):
         }
         return Response(summary_data)
 
-class BudgetListCreateView (generics.ListCreateAPIView):
-    serializer_class = BudgetSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        return Budget.objects.filter(user = self.request.user).order_by('year', 'month')
-
-    # Confere se a category pertence ao usuário e não há outro budget duplicado para aquele month/year/category
-    def perform_create(self, serializer):
-        # Garante que o budget pertence ao user logado
-        category = serializer.validated_data.get('category')
-        if category and category.user != self.request.user:
-            raise serializers.ValidationError("Categoria inválida para este usuário.")
-        
-
-        # Verificar se já existe um Budget para o mesmo mês/ano e mesma categoria
-        month = serializer.validated_data['month']
-        year = serializer.validated_data['year']
-        existing_qs = Budget.objects.filter(
-            user = self.request.user,
-            month = month,
-            year = year,
-            category = category
-        )
-
-        if existing_qs.exists():
-            raise serializers.ValidationError("Já existe um orçamento definido para este mês/ano/categoria.")
-        
-        serializer.save(user= self.request.user)
-    
-class BudgetRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
-    serializer_class = BudgetSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        return Budget.objects.filter(user = self.request.user)
-    
-    def perform_update(self, serializer):
-        category = serializer.validated_data.get('category')
-        if category and category.user != self.request.user:
-            raise serializers.ValidationError("Categoria inválida para este usuário.")
-        
-        month = serializer.validated_data.get('month', None)
-        year = serializer.validated_data.get('year', None)
-
-        # Se o user mudar month/year, verificar se já existe outro budget igual
-
-        if month and year:
-            existings_qs = Budget.objects.filter(
-                user = self.request.user,
-                month = month,
-                year = year,
-                category = category
-            ).exclude(pk = self.kwargs['pk'])
-
-            if existings_qs.exists():
-                raise serializers.ValidationError("Já existe um orçamento definido para este mês/ano/categoria")
-            
-        serializers.save()
 
 class ExpensesByCategoryView(APIView):
     permission_classes = [IsAuthenticated]
@@ -488,48 +312,3 @@ class NeedsVsWantsView(APIView):
         )
         return Response(data)
     
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def check_budget(request):
-    """
-    Verifica se um novo gasto excede o orçamento para uma determinada categoria.
-    """
-    category_id = request.data.get('category')
-    amount = float(request.data.get('amount', 0))
-    
-    if not category_id:
-        return JsonResponse({'error': 'Category not provided'}, status=400)
-
-    today = datetime.date.today()
-    try:
-        # Encontra o orçamento para a categoria e o mês/ano atuais
-        budget = Budget.objects.get(
-            user=request.user,
-            category_id=category_id,
-            month=today.month,
-            year=today.year
-        )
-        
-        # Soma as despesas existentes na categoria no mês atual
-        expenses = Transaction.objects.filter(
-            user=request.user,
-            category_id=category_id,
-            type='expense',
-            date__month=today.month,
-            date__year=today.year
-        ).aggregate(total_expenses=Sum('amount'))
-        
-        total_expenses = expenses['total_expenses'] or 0
-        
-        # Verifica se o novo gasto mais os gastos existentes excedem o orçamento
-        if total_expenses + amount > budget.amount:
-            return JsonResponse({
-                'exceeded': True,
-                'message': f'A adição de R${amount:.2f} excederá o orçamento de R${budget.amount:.2f} para esta categoria.'
-            })
-        else:
-            return JsonResponse({'exceeded': False})
-            
-    except Budget.DoesNotExist:
-        # Se não houver orçamento definido para a categoria, não há como exceder.
-        return JsonResponse({'exceeded': False, 'message': 'Nenhum orçamento definido para esta categoria.'})

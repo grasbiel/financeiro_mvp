@@ -9,16 +9,14 @@ from .views import (
     IncomesByCategoryView,
     MonthlySummaryView,
     TransactionViewSet,
-    BudgetViewSet,
     UserViewSet,
     MonthlyFlowView,
     NeedsVsWantsView,
-    check_budget
+   
 )
 router = DefaultRouter()
 router.register(r'categories', CategoryViewSet, basename='category')
 router.register(r'transactions', TransactionViewSet, basename='transaction')
-router.register(r'budgets', BudgetViewSet, basename='budget')
 router.register(r'users', UserViewSet, basename='user')
 
 urlpatterns = [
@@ -31,7 +29,6 @@ urlpatterns = [
 
 
     path('monthly-summary/', MonthlySummaryView.as_view(), name='monthly-summary'),
-    path('check-budget/', check_budget, name='check-budget'),
     path('reports/expenses-by-category/', ExpensesByCategoryView.as_view(), name="expenses-by-category"),
     path('reports/incomes-by-category/', IncomesByCategoryView.as_view(), name='incomes-by-category'),
     path('reports/expenses-by-emotion/', EmotionalSpendingView.as_view(), name='emotional-spending'),
