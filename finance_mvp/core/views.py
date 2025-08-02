@@ -123,7 +123,8 @@ class TransactionListCreateView(generics.ListCreateAPIView):
 
             # Verifica se o novo gasto excede o limite do orçamento
             if (total_spent + expense_value) > budget.value:
-                category_name = budget.category.name if budget.category else "Geral"
+                # CORREÇÃO: Verificamos se budget.category existe antes de tentar acessar .name
+                category_name = budget.category.name if budget.category is not None else "Geral"
                 
                 raise serializers.ValidationError(
                     f"Esta transação excede o orçamento de R$ {budget.value:.2f} "
