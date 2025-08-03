@@ -252,23 +252,23 @@ class MonthlyFlowView (APIView):
 
     def get(self, request, *args, **kwargs):
         user = request.user
-        now = timezone.now()
+        try:
+            # Pega os parâmetros da URL, com o ano/mês atual como padrão
+            year = int(request.query_params.get('year', timezone.now().year))
+            month = int(request.query_params.get('month', timezone.now().month))
+        except (ValueError, TypeError):
+            return Response({"error": "Parâmetros de ano e mês inválidos."}, status=400)
         
-        # Define o primeiro e o último dia do mês atual
-        first_day_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        next_month = (first_day_of_month.replace(day=28) + datetime.timedelta(days=4))
-        last_day_of_month = next_month - datetime.timedelta(days=next_month.day)
-
-        # Filtra transações do usuário no mês atual
+        # Filtra transações do usuário no mês e ano especificados
         transactions = Transaction.objects.filter(
             user=user,
-            date__range=[first_day_of_month.date(), last_day_of_month.date()]
+            date__year=year,
+            date__month=month
         )
 
-        # Agrupa por dia e soma receitas e despesas
         daily_data = (
             transactions
-            .annotate(day_date=TruncDay('date')) # Agrupa por dia
+            .annotate(day_date=TruncDay('date'))
             .values('day_date')
             .annotate(
                 receita=Sum(Case(When(value__gt=0, then=F('value')), default=0, output_field=DecimalField())),
@@ -277,13 +277,12 @@ class MonthlyFlowView (APIView):
             .order_by('day_date')
         )
 
-        # Formata a saída para o frontend
         formatted_data = []
         for item in daily_data:
             formatted_data.append({
-                'day': item['day_date'].strftime('%d'), # Envia apenas o dia como string
+                'day': item['day_date'].strftime('%d'),
                 'receita': item['receita'],
-                'despesa': abs(item['despesa']) # Envia despesa como valor positivo
+                'despesa': abs(item['despesa'])
             })
 
         return Response(formatted_data)
