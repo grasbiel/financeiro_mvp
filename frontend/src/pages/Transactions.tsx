@@ -241,6 +241,7 @@ export default function Transactions() {
                             <TableCell align="right">Valor (R$)</TableCell>
                             <TableCell>Categoria</TableCell>
                             <TableCell>Gatilho Emocional</TableCell>
+                            <TableCell align='right'>Ações</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
