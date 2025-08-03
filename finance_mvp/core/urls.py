@@ -12,6 +12,8 @@ from .views import (
     UserViewSet,
     MonthlyFlowView,
     NeedsVsWantsView,
+    CategoryExpenseView,
+    EmotionalExpenseView
    
 )
 router = DefaultRouter()
@@ -34,4 +36,6 @@ urlpatterns = [
     path('reports/expenses-by-emotion/', EmotionalSpendingView.as_view(), name='emotional-spending'),
     path('reports/needs-vs-wants/', NeedsVsWantsView.as_view(), name='needs-vs-wants'),
     path('reports/monthly-flow/', MonthlyFlowView.as_view(), name='monthly-flow'),
+    path('reports/category-expenses/', CategoryExpenseView.as_view(), name='category-expenses'),
+    path('reports/emotional-expenses/', EmotionalExpenseView.as_view(), name='emotional-expenses'),
 ]   

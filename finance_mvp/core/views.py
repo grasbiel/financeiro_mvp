@@ -329,3 +329,71 @@ class NeedsVsWantsView(APIView):
         )
         return Response(data)
     
+class CategoryExpenseView(APIView):
+    """
+    Retorna o top 5 de despesas agrupado por categoria para um determinado mês e ano.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        try:
+            year = int(request.query_params.get('year', timezone.now().year))
+            month = int(request.query_params.get('month', timezone.now().month))
+        except (ValueError, TypeError):
+            return Response({"error": "Parâmetros de ano e mês inválidos."}, status=400)
+
+        expenses = Transaction.objects.filter(
+            user=user, 
+            value__lt=0,
+            date__year=year,
+            date__month=month
+        ).values('category__name').annotate(
+            total_spent=Sum(F('value'))
+        ).order_by('total_spent')[:5]
+
+        formatted_expenses = []
+        for expense in expenses:
+            category_name = expense['category__name'] if expense['category__name'] is not None else 'Sem Categoria'
+            formatted_expenses.append({
+                'category_name': category_name,
+                'total_spent': abs(expense['total_spent'])
+            })
+        
+        return Response(formatted_expenses)
+
+
+# 3. NOVA VIEW (ADICIONAR)
+class EmotionalExpenseView(APIView):
+    """
+    Retorna o top 5 de despesas agrupado por gatilho emocional para um determinado mês e ano.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        try:
+            year = int(request.query_params.get('year', timezone.now().year))
+            month = int(request.query_params.get('month', timezone.now().month))
+        except (ValueError, TypeError):
+            return Response({"error": "Parâmetros de ano e mês inválidos."}, status=400)
+
+        expenses = Transaction.objects.filter(
+            user=user, 
+            value__lt=0,
+            date__year=year,
+            date__month=month
+        ).exclude(emotional_trigger__isnull=True).exclude(emotional_trigger='').values(
+            'emotional_trigger'
+        ).annotate(
+            total_spent=Sum(F('value'))
+        ).order_by('total_spent')[:5]
+
+        formatted_expenses = []
+        for expense in expenses:
+            formatted_expenses.append({
+                'emotional_trigger': expense['emotional_trigger'],
+                'total_spent': abs(expense['total_spent'])
+            })
+
+        return Response(formatted_expenses)
