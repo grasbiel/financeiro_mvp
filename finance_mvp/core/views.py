@@ -1,5 +1,5 @@
 from django.db.models import Sum, Value, Case, When, F, DecimalField
-from django.db.models.functions import Coalesce
+from django.db.models.functions import Coalesce, TruncDay
 from django.shortcuts import render
 
 # Create your views here.
@@ -249,26 +249,44 @@ class ExpensesByEmotionalTriggerView(APIView):
 
 class MonthlyFlowView (APIView):
     permission_classes = [permissions.IsAuthenticated]
+
     def get(self, request, *args, **kwargs):
-        # Calcula a soma das receitas (valores positivos)
-        total_revenue = (
-            Transaction.objects
-            .filter(user=request.user, value__gt=0)  # CORRIGIDO
-            .aggregate(total=Sum('value'))['total'] or 0 # CORRIGIDO
+        user = request.user
+        now = timezone.now()
+        
+        # Define o primeiro e o último dia do mês atual
+        first_day_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        next_month = (first_day_of_month.replace(day=28) + datetime.timedelta(days=4))
+        last_day_of_month = next_month - datetime.timedelta(days=next_month.day)
+
+        # Filtra transações do usuário no mês atual
+        transactions = Transaction.objects.filter(
+            user=user,
+            date__range=[first_day_of_month.date(), last_day_of_month.date()]
         )
 
-        # Calcula a soma das despesas (valores negativos)
-        total_expenses = (
-            Transaction.objects
-            .filter(user=request.user, value__lt=0)  # CORRIGIDO
-            .aggregate(total=Sum('value'))['total'] or 0 # CORRIGIDO
+        # Agrupa por dia e soma receitas e despesas
+        daily_data = (
+            transactions
+            .annotate(day_date=TruncDay('date')) # Agrupa por dia
+            .values('day_date')
+            .annotate(
+                receita=Sum(Case(When(value__gt=0, then=F('value')), default=0, output_field=DecimalField())),
+                despesa=Sum(Case(When(value__lt=0, then=F('value')), default=0, output_field=DecimalField()))
+            )
+            .order_by('day_date')
         )
 
-        # Retorna os totais
-        return Response({
-            'total_revenue': total_revenue,
-            'total_expenses': abs(total_expenses)
-        })
+        # Formata a saída para o frontend
+        formatted_data = []
+        for item in daily_data:
+            formatted_data.append({
+                'day': item['day_date'].strftime('%d'), # Envia apenas o dia como string
+                'receita': item['receita'],
+                'despesa': abs(item['despesa']) # Envia despesa como valor positivo
+            })
+
+        return Response(formatted_data)
 class EmotionalSpendingView(APIView):
     """
     View para calcular o total de gastos por gatilho emocional.
