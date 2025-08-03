@@ -250,7 +250,7 @@ export default function Transactions() {
                                     <TableCell>{new Date(r.date).toLocaleDateString()}</TableCell>
                                     <TableCell>{r.description || '-'}</TableCell>
                                     <TableCell align='right' style={{ color: parseFloat(String(r.value)) < 0 ? 'red' : 'green' }}>
-                                        {parseFloat(String(r.value.toFixed(2)))}
+                                        {parseFloat(String(r.value)).toFixed(2)}
                                     </TableCell>
                                     <TableCell>{r.category_name ?? 'N/A'}</TableCell>
                                     <TableCell>{r.emotional_trigger}</TableCell>
