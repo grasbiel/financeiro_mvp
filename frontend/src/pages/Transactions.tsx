@@ -9,29 +9,27 @@ import {
     Stack,
     TextField,
     MenuItem,
-    TablePagination
+    TablePagination,
+    IconButton,
+    Typography,
+    Paper,
+    TableContainer,
+    CircularProgress,
+    Alert,   
+    Box
 
 } from '@mui/material'
 
-import { useEffect, useState} from 'react'
-import api from '../api/api'
-
-import AddTransactionDialog from '../components/AddTransactionDialog'
+import DeleteIcon from '@mui/icons-material/Delete'
 import AddIcon from '@mui/icons-material/Add'
 
-interface Transaction {
-    id: number;
-    value: number;
-    date: string;
-    description: string | null;
-    category: number | null;
-    emotional_trigger: string;
-}
 
-interface Category {
-    id: number;
-    name: string;
-}
+
+import { useEffect, useState} from 'react'
+import api, {deleteTransaction} from '../api/api'
+
+import AddTransactionDialog from '../components/AddTransactionDialog'
+import { Category, Transaction } from '../types'
 
 const EMOTIONAL_TRIGGERS = [
     "Necessidade Básica",
@@ -47,6 +45,8 @@ export default function Transactions() {
     const [rows, setRows] = useState<Transaction[]>([]);
     const [cats, setCats] = useState<Category[]>([]);
     const [open, setOpen] = useState(false)
+    const [loading, setLoading]= useState(true)
+    const [error, setError] = useState<string | null>(null)
 
 
     // Filtros e paginação
@@ -58,9 +58,10 @@ export default function Transactions() {
     const [rowsPerPage, setRowsPerPage] = useState(20);
     const [totalCount, setTotalCount] = useState(0);
 
+
     const fetchCats = () => {
         api.get('/categories/').then(res => {
-            // --- DEPURAÇÃO ---
+           
             if (res.data && Array.isArray(res.data.results)){
                 setCats(res.data.results)
             } else if (Array.isArray(res.data)){
@@ -73,6 +74,7 @@ export default function Transactions() {
     };
 
     const fetchData = () => {
+        setLoading(true)
         const params: any = {
             page: page + 1,
             page_size: rowsPerPage,
@@ -88,11 +90,14 @@ export default function Transactions() {
                 setRows(res.data.results);
                 setTotalCount(res.data.count)
             } else {
-                console.error("A resposta da API não contém um Array de resultados")
+               setError("A resposta da API não contém um Array de resultados")
             }
             
         }).catch(error => {
+            setError("Erro ao buscar transações")
             console.error("Erro ao buscar transações:", error)
+        }).finally(()=>{
+            setLoading(false)
         });
     };  
 
@@ -124,11 +129,25 @@ export default function Transactions() {
 
     const handleFilterSubmit = () => {
         setPage(0);
+        fetchData()
     };
+
+    const handleDelete = async (id: number) => {
+        if(window.confirm('Tem certeza que deseja excluir esta transação?')) {
+            try {
+                await deleteTransaction(id);
+                alert('Transação excluida com sucesso!')
+                setRows(currentRows => currentRows.filter(row => row.id !== id))
+            } catch (err) {
+                console.error("Erro ao excluir transação:", err)
+                alert("Falha ao excluir a transação")
+            }
+        }
+    }
 
     return (
         <Container>
-            <h2>Transações</h2>
+            <Typography variant='h4' sx={{my:2}}>Transações</Typography>
             {/* Botão nova transação */}
 
             <Button
@@ -200,30 +219,54 @@ export default function Transactions() {
                     Aplicar Filtros
                 </Button>
             </Stack>
-            {/* Tabela de Transações */}
-            <Table>
-                <TableHead>
-                    <TableRow>
-                        <TableCell>Data</TableCell>
-                        <TableCell>Descrição</TableCell>
-                        <TableCell align="right">Valor (R$)</TableCell>
-                        <TableCell>Categoria</TableCell>
-                        <TableCell>Gatilho Emocional</TableCell>
-                    </TableRow>
-                </TableHead>
-                <TableBody>
-                    {rows.map(r => (
-                        <TableRow key={r.id}>
-                            <TableCell>{r.date}</TableCell>
-                            <TableCell>{r.description || '-'}</TableCell>
-                            <TableCell align='right'>{r.value}</TableCell>
-                            <TableCell>{r.category ?? '-'}</TableCell>
-                            <TableCell>{r.emotional_trigger}</TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
+            {loading && (
+                <Box sx={{display: 'flex', justifyContent:'center', my:4}}>
+                    <CircularProgress />
+                </Box>
+            )}
 
+            {error &&(
+                <Alert severity='error' sx={{my:2}}>
+                    {error}
+                </Alert>
+            )}
+            {/* Tabela de Transações */}
+            
+            <TableContainer component={Paper}>
+                <Table>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell>Data</TableCell>
+                            <TableCell>Descrição</TableCell>
+                            <TableCell align="right">Valor (R$)</TableCell>
+                            <TableCell>Categoria</TableCell>
+                            <TableCell>Gatilho Emocional</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {rows.map(r => (
+                            <TableRow key={r.id}>
+                                <TableCell>{new Date(r.date).toLocaleDateString()}</TableCell>
+                                <TableCell>{r.description || '-'}</TableCell>
+                                <TableCell align='right' style={{color: r.value < 0 ? 'red':'green'}}>{r.value.toFixed(2)}</TableCell>
+                                <TableCell>{r.category_name ?? 'N/A'}</TableCell>
+                                <TableCell>{r.emotional_trigger}</TableCell>
+                                <TableCell>
+                                    <IconButton
+                                        aria-label="delete"
+                                        size='small'
+                                        onClick={() =>handleDelete(r.id)}
+                                    >
+                                        <DeleteIcon fontSize='small'/>
+                                    </IconButton>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+
+            </TableContainer>
+            
             {/* PAGINAÇÃO */}
             <TablePagination
                 component="div"
@@ -232,8 +275,8 @@ export default function Transactions() {
                 onPageChange={(_, newPage) => setPage(newPage)}
                 rowsPerPage={rowsPerPage}
                 onRowsPerPageChange={e => {
-                setRowsPerPage(parseInt(e.target.value, 10));
-                setPage(0);
+                    setRowsPerPage(parseInt(e.target.value, 10));
+                    setPage(0);
                 }}
                 rowsPerPageOptions={[10, 20, 50]}
             />

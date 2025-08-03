@@ -1,4 +1,6 @@
 import axios from 'axios'
+import { Transaction } from '../types';
+
 
 const baseURL = import.meta.env.REACT_APP_API_URL || "https://financeiro-mvp.onrender.com/api/";
 
@@ -68,5 +70,15 @@ api.interceptors.response.use(
     }
  )
 
-
 export default api;
+
+
+export const getTransactions = async () =>{
+    const response = await api.get<{results: Transaction[]}>('/transactions/');
+    return response.data.results
+}
+
+export const deleteTransaction = async (id: number): Promise<void>=>{
+    await api.delete(`/transactions/${id}/`)
+}
+
