@@ -18,11 +18,18 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'password']
+        extra_kwargs = {'password': {'write_only': True}}
+
+    def validate_password(self, value):
+        if len(value) < 8:
+            raise serializers.ValidationError("A senha deve ter pelo menos 8 caracteres.")
+        # Adicione outras validações aqui (ex: caracteres especiais, números, etc.)
+        return value
 
     def create(self, validated_data):
         user = User.objects.create_user(
             username=validated_data['username'],
-            email=validated_data.get('email', ''),  # Torna o email opcional, se necessário
+            email=validated_data['email'],
             password=validated_data['password']
         )
         return user
