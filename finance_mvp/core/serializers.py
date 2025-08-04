@@ -41,10 +41,10 @@ class TransactionSerializer (serializers.ModelSerializer):
         allow_null= True,
         required = False
     )
-    
+    category_name= serializers.CharField(source="category.name", read_only=True, allow_null=True)
     class Meta:
         model = Transaction
-        fields = ['id', 'value', 'date', 'description', 'category', 'emotional_trigger']
+        fields = ['id', 'value', 'date', 'description', 'category', 'category_name', 'emotional_trigger']
         read_only_fields= ['id']
 
         
