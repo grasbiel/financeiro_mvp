@@ -13,27 +13,19 @@ class CategorySerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 class UserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only= True)
+    password = serializers.CharField(write_only=True)
 
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'password']
-        extra_kwargs= {
-            'password': {'write_only': True}
-        }
 
     def create(self, validated_data):
-        # sobrescreve para criar usuário com senha criptografada
-        password = validated_data.pop('password', None)
-        user = User(**validated_data)
-
-        if password:
-            user.set_password(password)
-
-        user.save()
-
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            email=validated_data.get('email', ''),  # Torna o email opcional, se necessário
+            password=validated_data['password']
+        )
         return user
-    
 
 class TransactionSerializer (serializers.ModelSerializer):
     category = serializers.PrimaryKeyRelatedField(
