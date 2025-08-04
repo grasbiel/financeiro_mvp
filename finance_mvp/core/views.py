@@ -1,12 +1,13 @@
 from django.db.models import Sum, Value, Case, When, F, DecimalField
 from django.db.models.functions import Coalesce, TruncDay
 from django.shortcuts import render
+from django.db import IntegrityError
 
 # Create your views here.
 
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework import generics, permissions, serializers, viewsets
+from rest_framework import generics, permissions, serializers, viewsets, status
 from rest_framework.decorators import api_view, permission_classes
 from django.http import JsonResponse
 from rest_framework.response import Response
@@ -39,12 +40,21 @@ class UserViewSet (viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
-    def get_permissions(self):
-        if self.action == 'create':
-            self.permission_classes = [AllowAny]
-        else:
-            self.permission_classes = [IsAuthenticated]
-        return super().get_permissions()
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except IntegrityError:
+            return Response(
+                {"error": "Este nome de usuário ou e-mail já está em uso."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            # Log do erro para depuração
+            print(f"Erro inesperado ao criar usuário: {e}")
+            return Response(
+                {"error": "Ocorreu um erro inesperado. Tente novamente mais tarde."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 class CategoryRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = CategorySerializer
     permission_classes = [permissions.IsAuthenticated]
