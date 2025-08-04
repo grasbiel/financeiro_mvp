@@ -9,6 +9,13 @@ export const lightTheme = createTheme({
         secondary: {
             main: '#dc004e',
         },
+        background: {
+            default: '#ffffff',
+            paper: '#f5f5f5',
+        },
+        text:{
+            primary: 'rgba(0,0,0,0.87)'
+        }
     },
 });
 
