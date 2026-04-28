@@ -2,7 +2,7 @@ import axios from 'axios'
 import { Transaction } from '../types';
 
 
-const baseURL = import.meta.env.REACT_APP_API_URL || "https://financeiro-mvp.onrender.com/api/";
+const baseURL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api/";
 
 const api = axios.create(
     {

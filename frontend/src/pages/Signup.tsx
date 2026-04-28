@@ -52,7 +52,7 @@ export default function Signup() {
             navigate('/login')
 
         } catch(error:any) {
-            //Captura erros do servidor (ex: usuário já existe)
+            
             const errorMsg= error.response?.data?.username?.[0] || 'Ocorreu um erro no cadastro.';
             setServerError(errorMsg)
         }
