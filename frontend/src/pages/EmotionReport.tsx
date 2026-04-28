@@ -1,51 +1,57 @@
-import {useEffect, useState} from 'react'
-import {Container, Typography} from '@mui/material'
 import {
-    PieChart, Pie, Cell, Tooltip, Legend
+  Box, Card, CardContent, CircularProgress, Typography,
+} from '@mui/material'
+import { useEffect, useState } from 'react'
+import {
+  Bar, BarChart, CartesianGrid, Cell,
+  ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from 'recharts'
 import api from '../api/api'
+import { auroraTokens as t } from '../theme/aurora'
 
-interface EmotionData {
-    emotional_trigger: string;
-    total_expenses: number
-}
-
-const COLORS = ['#FF6384', '#36A2EB', '#FFCE56', '#8BC34A', '#FF9800', '#9C27B0', '#607D8B'];
+const fmt = (v: number) =>
+  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
 export default function EmotionReport() {
-    const [data, setData] = useState<EmotionData[]>([]);
+  const [data, setData] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
-    useEffect(() => {
-        api.get<EmotionData[]>('reports/expenses-by-emotion/')
-            .then(res => setData(res.data))
-            .catch(err => console.error(err))
-    }, []);
+  useEffect(() => {
+    api.get('/reports/emotional-expenses/')
+      .then(r => setData(r.data))
+      .finally(() => setLoading(false))
+  }, [])
 
-
-    return (
-        <Container>
-            <Typography variant="h5" sx={{mt: 4, mb: 2}}>
-                Despesas por Gatilho Emocional
+  return (
+    <Box sx={{ p: 3, maxWidth: 800 }}>
+      <Typography variant="h5" fontWeight={600} mb={3}>Relatório Emocional</Typography>
+      <Card sx={{ border: '1px solid var(--border)', boxShadow: 'none' }}>
+        <CardContent>
+          <Typography variant="h6" mb={2}>Gastos por gatilho emocional</Typography>
+          {loading ? (
+            <Box sx={{ py: 4, textAlign: 'center' }}><CircularProgress size={24} /></Box>
+          ) : data.length === 0 ? (
+            <Typography variant="body2" sx={{ color: 'var(--text-1)', py: 4, textAlign: 'center' }}>
+              Nenhum dado disponível
             </Typography>
-            {data.length > 0 && (
-                <PieChart width={400} height={300}>
-                    <Pie
-                        data={data}
-                        dataKey="total_expenses"
-                        nameKey="emotional_trigger"
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={100}
-                        label
-                    >
-                        {data.map((_, idx) => (
-                            <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
-                        ))}
-                    </Pie>
-                    <Tooltip formatter={(value: number) => `R$ ${value}`} />
-                    <Legend />
-                </PieChart>
-            )} 
-        </Container>
-    )
+          ) : (
+            <ResponsiveContainer width="100%" height={320}>
+              <BarChart data={data} layout="vertical" margin={{ top: 4, right: 80, left: 8, bottom: 4 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
+                <XAxis type="number" hide />
+                <YAxis type="category" dataKey="emotional_trigger" width={150}
+                  tick={{ fontSize: 12, fill: 'var(--text-1)' }} axisLine={false} tickLine={false} />
+                <Tooltip formatter={(v: number) => fmt(v)} />
+                <Bar dataKey="total_spent" name="Total gasto" radius={[0, 4, 4, 0]}>
+                  {data.map((_: any, i: number) => (
+                    <Cell key={i} fill={t.categoryColors[i % t.categoryColors.length]} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </CardContent>
+      </Card>
+    </Box>
+  )
 }

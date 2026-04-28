@@ -1,133 +1,119 @@
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet'
 import {
-    Container, 
-    TextField, 
-    Button, 
-    Box,
-    Typography,
-    Grid,
-    Link as MuiLink, // Renomeando o Link do Mui para evitar conflito
-    Alert
+  Alert, Box, Button, CircularProgress, Link,
+  TextField, Typography,
 } from '@mui/material'
-
-import {useState} from 'react'
-import {useAuth} from '../auth/AuthProvider'
-import {Navigate, Link as RouterLink} from 'react-router-dom';
-import {useForm, Controller} from 'react-hook-form';
-
+import { useState } from 'react'
+import { useNavigate, Link as RouterLink } from 'react-router-dom'
+import { login } from '../api/api'
 
 export default function Login() {
-    const {login, user} = useAuth()
-    const [error, setError] = useState<string | null>(null)
+  const navigate = useNavigate()
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-    const{
-        control, 
-        handleSubmit,
-        formState: {errors},
-    } = useForm({
-        defaultValues:{
-            username:'',
-            password: '',
-        },
-    });
-
-    if (user) {
-        return <Navigate to="/" replace/>
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+    try {
+      await login(username, password)
+      navigate('/')
+    } catch {
+      setError('Usuário ou senha incorretos.')
+    } finally {
+      setLoading(false)
     }
+  }
 
-    // A função de submit recebe os dados do react-hook-form
-    const onSubmit = async (data: any) => {
-        setError(null);
-        try{
-            await login(data.username, data.password);
-        } catch {
-            setError('Credenciais inválidas. Por favor, tente novamente')
-        }
-    };
-
-    return (
-        // Box principal para centralizar o conteúdo na tela inteira
-        <Box
-            sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                minHeight: '100vh',
-            }}
-        >
-
-            <Container maxWidth="xs">
-                <Box
-                    sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: 2,
-                    }}
-                >
-                    <Typography component="h1" variant="h5">
-                        Entrar
-                    </Typography>
-
-                    {error && <Alert severity='error' sx={{width: '100%'}}>{error}</Alert>}
-
-                    <Box
-                        component="form"
-                        onSubmit={handleSubmit(onSubmit)}
-                        sx={{
-                            width: '100%',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap:2,
-                        }}
-                    >
-                        <Controller
-                            name='username'
-                            control={control}
-                            rules={{required: 'O nome de usuário é obrigatório'}}
-                            render={({field}) => (
-                                <TextField
-                                    {...field}
-                                    label="Usuário"
-                                    fullWidth
-                                    error={!!errors.username}
-                                    helperText={errors.username?.message}
-                                />
-                            )}  
-                        />
-
-                        <Controller
-                            name="password"
-                            control={control}
-                            rules={{required: 'A senha é obrigatória'}}
-                            render={({field}) => (
-                                <TextField
-                                    {...field}
-                                    label="Senha"
-                                    type="password"
-                                    fullWidth
-                                    error={!!errors.password?.message}
-                                />
-                            )}  
-                        />
-
-                        <Button
-                            variant='contained' type='submit' fullWidth
-                        >
-                            Entrar
-                        </Button>
-
-                        <Grid container justifyContent={'flex-end'}>
-                            <Grid>
-                                <MuiLink component={RouterLink} to="/signup/" variant='body2'>
-                                    Não tem uma conta? Cadastre-se
-                                </MuiLink>
-                            </Grid>
-                        </Grid>
-                    </Box>
-                </Box>
-            </Container>
-
+  return (
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        bgcolor: 'var(--bg-0)',
+        px: 2,
+      }}
+    >
+      <Box
+        component="form"
+        onSubmit={handleSubmit}
+        sx={{
+          width: '100%',
+          maxWidth: 400,
+          bgcolor: 'background.paper',
+          border: '1px solid var(--border)',
+          borderRadius: 'var(--radius-md)',
+          p: 4,
+          backdropFilter: 'blur(12px)',
+          position: 'relative',
+          '&::before': {
+            content: '""', position: 'absolute', top: 0, left: 0, right: 0,
+            height: '2px',
+            background: 'linear-gradient(90deg, var(--accent), transparent)',
+            borderRadius: 'var(--radius-md) var(--radius-md) 0 0',
+          },
+        }}
+      >
+        {/* Logo */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
+          <AccountBalanceWalletIcon sx={{ color: 'var(--accent)', fontSize: 32 }} />
+          <Typography variant="h5" fontWeight={700} sx={{ letterSpacing: '-0.01em' }}>
+            Finance
+          </Typography>
         </Box>
-    )
-};
+
+        <Typography variant="body2" sx={{ color: 'var(--text-1)', mb: 3 }}>
+          Entre para gerenciar suas finanças
+        </Typography>
+
+        {error && <Alert severity="error" sx={{ mb: 2, borderRadius: 'var(--radius-sm)' }}>{error}</Alert>}
+
+        <TextField
+          label="Usuário"
+          value={username}
+          onChange={e => setUsername(e.target.value)}
+          fullWidth
+          size="small"
+          sx={{ mb: 2 }}
+          autoComplete="username"
+          autoFocus
+        />
+        <TextField
+          label="Senha"
+          type="password"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          fullWidth
+          size="small"
+          sx={{ mb: 3 }}
+          autoComplete="current-password"
+        />
+
+        <Button
+          type="submit"
+          variant="contained"
+          fullWidth
+          disabled={loading}
+          sx={{
+            bgcolor: 'var(--accent)', '&:hover': { bgcolor: '#4a7bef' },
+            fontWeight: 600, py: 1.2, mb: 2,
+          }}
+        >
+          {loading ? <CircularProgress size={20} color="inherit" /> : 'Entrar'}
+        </Button>
+
+        <Typography variant="body2" textAlign="center" sx={{ color: 'var(--text-1)' }}>
+          Não tem conta?{' '}
+          <Link component={RouterLink} to="/signup" underline="hover" sx={{ color: 'var(--accent)', fontWeight: 500 }}>
+            Criar conta
+          </Link>
+        </Typography>
+      </Box>
+    </Box>
+  )
+}

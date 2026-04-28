@@ -1,6 +1,21 @@
 {
-  "dependencies": {
-    "@mui/icons-material": "^7.1.2",
-    "icons-material": "^0.0.1-security"
+  "name": "finance-mvp",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently --names BACK,FRONT --prefix-colors blue,green \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd finance_mvp && python manage.py runserver",
+    "dev:frontend": "cd frontend && npm run dev",
+    "install:all": "cd frontend && npm install",
+    "lint": "concurrently --names BACK,FRONT \"npm run lint:backend\" \"npm run lint:frontend\"",
+    "lint:backend": "cd finance_mvp && ruff check . && black --check .",
+    "lint:frontend": "cd frontend && npm run lint",
+    "format:backend": "cd finance_mvp && ruff check --fix . && black .",
+    "format:frontend": "cd frontend && npx prettier --write src/",
+    "test:backend": "cd finance_mvp && python manage.py test",
+    "test:frontend": "cd frontend && npx tsc --noEmit"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
   }
 }

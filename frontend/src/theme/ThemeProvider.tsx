@@ -1,40 +1,25 @@
-import  {
-   createContext, 
-   useState, 
-   useMemo, 
-   ReactNode 
-} from "react";
+import { createContext, useContext, useMemo, useState, type ReactNode } from 'react'
+import { CssBaseline, ThemeProvider as MuiThemeProvider } from '@mui/material'
+import { darkTheme, lightTheme } from '../theme'
 
-import { ThemeProvider as MuiThemeProvider, CssBaseline} from "@mui/material";
-import {lightTheme, darkTheme} from '../theme'
+interface ThemeCtx { toggleTheme: () => void; isDark: boolean }
+export const ThemeToggleContext = createContext<ThemeCtx>({ toggleTheme: () => {}, isDark: true })
+export const useThemeToggle = () => useContext(ThemeToggleContext)
 
-export const ThemeToggleContext = createContext({
-    toggleTheme: () => {},
-})
+export function AppThemeProvider({ children }: { children: ReactNode }) {
+  const [mode, setMode] = useState<'light' | 'dark'>('dark')
+  const toggleTheme = () => setMode(m => (m === 'light' ? 'dark' : 'light'))
+  const theme = useMemo(() => (mode === 'light' ? lightTheme : darkTheme), [mode])
 
-interface AppThemeProviderProps {
-    children: ReactNode;
-}
+  // Sync CSS var data-theme on html element
+  document.documentElement.setAttribute('data-theme', mode)
 
-export function AppThemeProvider({children}: AppThemeProviderProps) {
-    const [themeName, setThemeName] = useState<'light' | 'dark'>('dark');
-
-    const toggleTheme =() => {
-        setThemeName((prevTheme) => (prevTheme === 'light' ? 'dark': 'light'));
-    };
-
-    const theme = useMemo(() => (themeName=== 'light' ? lightTheme: darkTheme), [themeName]);
-
-    const themeToggleValue = useMemo(() => ({
-        toggleTheme,
-    }), [toggleTheme]);
-
-    return(
-        <ThemeToggleContext.Provider value={themeToggleValue}>
-            <MuiThemeProvider theme={theme}>
-                <CssBaseline />
-                {children}
-            </MuiThemeProvider>
-        </ThemeToggleContext.Provider>
-    );
+  return (
+    <ThemeToggleContext.Provider value={{ toggleTheme, isDark: mode === 'dark' }}>
+      <MuiThemeProvider theme={theme}>
+        <CssBaseline />
+        {children}
+      </MuiThemeProvider>
+    </ThemeToggleContext.Provider>
+  )
 }

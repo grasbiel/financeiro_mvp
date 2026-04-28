@@ -1,152 +1,92 @@
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet'
 import {
-    Container,
-    Box,
-    TextField,
-    Button,
-    Typography,
-    Link as MuiLink,
-    Alert,
-    Grid,
+  Alert, Box, Button, CircularProgress, Link,
+  TextField, Typography,
 } from '@mui/material'
-
-import {useState} from 'react'
-import {useNavigate, Link as RouterLink, Navigate} from 'react-router-dom'
-import {useForm, Controller} from 'react-hook-form'
-import api from '../api/api'
-import { useAuth } from '../auth/AuthProvider'
+import { useState } from 'react'
+import { useNavigate, Link as RouterLink } from 'react-router-dom'
+import { signup, login } from '../api/api'
 
 export default function Signup() {
-    const {user}= useAuth()
-    const navigate = useNavigate();
-    const [serverError, setServerError] = useState<string | null>(null)
+  const navigate = useNavigate()
+  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-    const {
-        control,
-        handleSubmit,
-        watch,
-        formState: {errors}
-    } = useForm({
-        defaultValues: {
-            username: '',
-            email: '',
-            password: '',
-            confirmPassword: '',
-        }
-    });
-
-    if (user) {
-        return <Navigate to="/" replace />
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    if (password.length < 8) { setError('A senha deve ter pelo menos 8 caracteres.'); return }
+    setLoading(true)
+    try {
+      await signup(username, email, password)
+      await login(username, password)
+      navigate('/')
+    } catch (err: any) {
+      setError(err?.response?.data?.error || 'Erro ao criar conta. Tente outro usuário.')
+    } finally {
+      setLoading(false)
     }
-    const password = watch('password');
-    const onSubmit= async(data: any) => {
-        setServerError(null);
+  }
 
-        try {
-            await api.post('users/', {
-                username: data.username,
-                email: data.email,
-                password: data.password
-            });
-
-            // Redireciona para o login após o sucesso
-            navigate('/login')
-
-        } catch(error:any) {
-            
-            const errorMsg= error.response?.data?.username?.[0] || 'Ocorreu um erro no cadastro.';
-            setServerError(errorMsg)
-        }
-    };
-
-    return (
-        <Box
-            sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                minHeight: '100vh'
-            }}
-        >
-
-        <Container maxWidth="xs">
-            <Box 
-                sx={{
-                    mt:8, 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    alignItems: 'center',
-                    gap: 2
-
-                }}
-            >
-                <Typography component='h1' variant='h5'>
-                    Cadastrar
-                </Typography>
-                
-                {serverError && <Alert severity='error' sx={{width:'100%'}}>{serverError}</Alert>}
-                
-                <Box component='form' onSubmit={handleSubmit(onSubmit)} sx={{ width: '100%', mt: 1}}>
-                    
-                        <Controller
-                            name="username" 
-                            control={control}
-                            rules={{required: 'O nome do usuário é obrigatório'}}
-                            render={({field}) => (
-                                <TextField {...field} label='Usuário' fullWidth error={!!errors.username} 
-                                    helperText={errors.username?.message}
-                                />
-                            )}
-                        />
-                        <Controller 
-                            name='email'
-                            control={control}
-                            rules={{required: 'Email é obrigatório', pattern:{value:/^\S+@\S+$/i, message:'Email inválido'}}}
-                            render={({field}) =>(
-                                <TextField {...field} label="Email" type='email' fullWidth 
-                                    error={!!errors.email} helperText={errors.email?.message}
-                                />
-                            )}
-                        />
-
-                        <Controller
-                            name='password'
-                            control={control}
-                            rules={{required : 'Senha é obrigatória', minLength:{value:6, message:'A senha deve ter no mínimo 6 caracteres'}}}
-                            render={({field}) =>(
-                                <TextField {...field} label="Senha" type='password' fullWidth
-                                    error={!!errors.password} helperText={errors.password?.message}
-                                />
-                            )}
-                        />
-
-                        <Controller
-                            name="confirmPassword"
-                            control={control}
-                            rules={{
-                                required:'Confirmação de senha é obrigatória',
-                                validate: (value) => value === password || 'As senhas não coincidem'
-                            }}
-                            render={({field}) =>(
-                                <TextField {...field} label="Confirmar senha" type='password' fullWidth 
-                                    error={!!errors.confirmPassword} helperText={errors.confirmPassword?.message}
-                                />
-                            )}
-                        />
-                    
-                    <Button type='submit' fullWidth variant='contained' sx={{mt:3, mb:2}}>
-                        Cadastrar
-                    </Button>
-                    <Grid container justifyContent="flex-end">
-                        <MuiLink component={RouterLink} to="/login" variant='body2'>
-                            Já tem uma conta? Entre
-                        </MuiLink>
-                    </Grid>
-                    
-                </Box>
-            </Box>
-        </Container>
-
+  return (
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        bgcolor: 'var(--bg-0)', px: 2,
+      }}
+    >
+      <Box
+        component="form"
+        onSubmit={handleSubmit}
+        sx={{
+          width: '100%', maxWidth: 400,
+          bgcolor: 'background.paper',
+          border: '1px solid var(--border)',
+          borderRadius: 'var(--radius-md)',
+          p: 4,
+          position: 'relative',
+          '&::before': {
+            content: '""', position: 'absolute', top: 0, left: 0, right: 0,
+            height: '2px',
+            background: 'linear-gradient(90deg, var(--accent), transparent)',
+            borderRadius: 'var(--radius-md) var(--radius-md) 0 0',
+          },
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
+          <AccountBalanceWalletIcon sx={{ color: 'var(--accent)', fontSize: 32 }} />
+          <Typography variant="h5" fontWeight={700} sx={{ letterSpacing: '-0.01em' }}>Finance</Typography>
         </Box>
-    );
+
+        <Typography variant="body2" sx={{ color: 'var(--text-1)', mb: 3 }}>
+          Crie sua conta gratuita
+        </Typography>
+
+        {error && <Alert severity="error" sx={{ mb: 2, borderRadius: 'var(--radius-sm)' }}>{error}</Alert>}
+
+        <TextField label="Usuário" value={username} onChange={e => setUsername(e.target.value)}
+          fullWidth size="small" sx={{ mb: 2 }} autoFocus />
+        <TextField label="E-mail" type="email" value={email} onChange={e => setEmail(e.target.value)}
+          fullWidth size="small" sx={{ mb: 2 }} />
+        <TextField label="Senha (mín. 8 caracteres)" type="password" value={password}
+          onChange={e => setPassword(e.target.value)} fullWidth size="small" sx={{ mb: 3 }} />
+
+        <Button type="submit" variant="contained" fullWidth disabled={loading}
+          sx={{ bgcolor: 'var(--accent)', '&:hover': { bgcolor: '#4a7bef' }, fontWeight: 600, py: 1.2, mb: 2 }}>
+          {loading ? <CircularProgress size={20} color="inherit" /> : 'Criar conta'}
+        </Button>
+
+        <Typography variant="body2" textAlign="center" sx={{ color: 'var(--text-1)' }}>
+          Já tem conta?{' '}
+          <Link component={RouterLink} to="/login" underline="hover" sx={{ color: 'var(--accent)', fontWeight: 500 }}>
+            Entrar
+          </Link>
+        </Typography>
+      </Box>
+    </Box>
+  )
 }
